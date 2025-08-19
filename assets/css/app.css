@@ -1,0 +1,153 @@
+/* ===== Paleta ===== */
+:root{
+  --clr-dark: #386641;
+  --clr-mid:  #6A994E;
+  --clr-lime: #A7C957;
+  --clr-cream:#F2E8CF;
+  --clr-red:  #BC4749;
+
+  /* Bootstrap overrides */
+  --bs-primary: var(--clr-mid);
+  --bs-primary-rgb: 106,153,78;
+  --bs-danger: var(--clr-red);
+  --bs-link-color: var(--clr-mid);
+  --bs-link-hover-color: #4f7e3f;
+}
+
+html,body{ height:100%; }
+body{
+  background: var(--clr-cream) !important;
+  color:#222;
+}
+
+/* Tarjetas y tipografía */
+.card{
+  border:0;
+  border-radius:16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+}
+.card-title{ color: var(--clr-dark); }
+
+/* Sidebar */
+.app-sidebar{
+  background: var(--clr-dark);
+  color:#fff;
+  min-height: 100vh;
+}
+.app-sidebar .nav-link{
+  color:#fff !important;
+  opacity:.9;
+  border-radius:10px;
+  padding:.45rem .75rem;
+}
+.app-sidebar .nav-link:hover{
+  background: rgba(255,255,255,.08);
+  opacity:1;
+}
+.app-sidebar .nav-link.active{
+  background: var(--clr-mid);
+}
+
+/* Botones (base) */
+.btn-primary{ border:none; }
+.btn-outline-primary{
+  border-color: var(--clr-mid);
+  color: var(--clr-mid);
+}
+.btn-outline-primary:hover{
+  background: var(--clr-mid);
+  border-color: var(--clr-mid);
+  color:#fff;
+}
+.btn-danger{ background: var(--clr-red); border:none; }
+
+/* Módulos/estadísticas */
+.stat{
+  border-radius:16px;
+  padding:18px;
+  background: #ffffffaa;
+  border: 1px solid #0000000d;
+}
+.stat .label{ color:#666; }
+.stat .value{ font-size:1.75rem; font-weight:700; color: var(--clr-dark); }
+
+/* Badges por estado de pedido */
+.badge-status-pendiente{
+  background: var(--clr-lime);
+  color:#234; 
+}
+.badge-status-preparacion{
+  background: var(--clr-mid);
+}
+.badge-status-listo{
+  background: var(--clr-dark);
+}
+
+/* Formularios */
+.form-control, .form-select{
+  border-radius:12px;
+  border-color:#e6e6e6;
+}
+.form-control:focus, .form-select:focus{
+  border-color: var(--clr-mid);
+  box-shadow: 0 0 0 .25rem rgba(106,153,78,.15);
+}
+
+/* === Fuerza colores de botones Bootstrap=== */
+.btn-primary{
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--clr-mid);
+  --bs-btn-border-color: var(--clr-mid);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #5f8c45;
+  --bs-btn-hover-border-color: #5f8c45;
+  --bs-btn-focus-shadow-rgb: 106,153,78;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #4f7e3f;
+  --bs-btn-active-border-color: #4f7e3f;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--clr-mid);
+  --bs-btn-disabled-border-color: var(--clr-mid);
+}
+
+.btn-outline-primary{
+  --bs-btn-color: var(--clr-mid);
+  --bs-btn-border-color: var(--clr-mid);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--clr-mid);
+  --bs-btn-hover-border-color: var(--clr-mid);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--clr-mid);
+  --bs-btn-active-border-color: var(--clr-mid);
+  --bs-btn-disabled-color: var(--clr-mid);
+}
+
+.btn-danger{
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--clr-red);
+  --bs-btn-border-color: var(--clr-red);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #a53f42;
+  --bs-btn-hover-border-color: #a53f42;
+  --bs-btn-focus-shadow-rgb: 188,71,73;
+  --bs-btn-active-bg: #95383b;
+  --bs-btn-active-border-color: #95383b;
+}
+
+/* Thumbnails de platillos */
+.thumb{
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #eee;
+  display: block;
+}
+.thumb--placeholder{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#666;
+  font-size:.75rem;
+  text-align:center;
+}
