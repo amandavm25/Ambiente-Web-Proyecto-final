@@ -275,6 +275,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="form-text">Se aplicará al confirmar el pedido.</div>
                   </div>
 
+                  <div class="mb-3">
+                    <label class="form-label">Método de pago</label>
+                    <select id="metodoPago" class="form-select">
+                      <option value=""> Seleccionar </option>
+                      <option value="tarjeta">Tarjeta</option>
+                      <option value="sinpe">SINPE Móvil</option>
+                      <option value="transferencia">Transferencia bancaria</option>
+                    </select>
+                  </div>
+
+                  <div id="pagoTarjeta" class="pago-seccion d-none">
+                    <h6>Pago con tarjeta</h6>
+                    <input type="text" clas="form-control mb-2" placeholder="Número de tarjeta">
+                    <input type="text" clas="form-control mb-2" placeholder="MM/AA">
+                    <input type="text" class="form-control mb-2" placeholder="CVV">
+                  </div>
+
+                  <div i="pagoSinpe" class="pago-seccion d-none">
+                    <h6>Pago con SINPE Móvil</h6>
+                    <p>Realice la transferencia al número: <strong>8888-8888</strong></p>
+                  </div>
+
+                  <div id="pagoTransferencia" class="pago-seccion d-none">
+                    <h6>Transferencia bancaria</h6>
+                    <p>Cuenta IBAN: <strong>CR00-1234-5678-9012-3456</strong></p>
+                  </div>
+
                   <button class="btn btn-primary">Confirmar pedido</button>
                 </form>
               </div>
@@ -379,6 +406,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     });
 
     renderCart();
+
+    const selectPago = document.getElementById("metodoPago");
+    const seccionesPago = {
+      tarjeta: document.getElementById("pagoTarjeta"),
+      sinpe: document.getElementById("pagoSinpe"),
+      transferencia: document.getElementById("pagoTransferencia")
+    };
+    selectPago.addEventListener("change", () => {
+      Object.values(seccionesPago).forEach(div -> div.classList.add("d-none"));
+      if (selectPago.value && seccionesPago[selectPago.value]) {
+        seccionesPago[selectPago.value].classList.remove("d-none");
+      }
+    });
   </script>
 </body>
 
