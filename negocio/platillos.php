@@ -1,26 +1,30 @@
 <?php
 session_start();
-require_once("../include/auth.php"); require_role('negocio');
+require_once("../include/auth.php");
+require_role('negocio');
 require_once("../include/conexion.php");
 
 /* === Rutas === */
 $BASE = "/mamalila_prof";
-$BASE_DIR = dirname(__DIR__);               
+$BASE_DIR = dirname(__DIR__);
 $UPLOAD_DIR = $BASE_DIR . "/uploads/platillos";
 $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
-if (!is_dir($UPLOAD_DIR)) { @mkdir($UPLOAD_DIR, 0777, true); }
+if (!is_dir($UPLOAD_DIR)) {
+  @mkdir($UPLOAD_DIR, 0777, true);
+}
 
 /* === Id del negocio del usuario logueado === */
 $uid = $_SESSION['usuario']['Id_usuario'];
 $st = $mysqli->prepare("SELECT Id_negocio FROM negocios WHERE Usuario_id=?");
-$st->bind_param("i",$uid);
+$st->bind_param("i", $uid);
 $st->execute();
 $row = $st->get_result()->fetch_assoc();
 $st->close();
 $negocio_id = $row ? (int)$row['Id_negocio'] : 0;
 
 /* === Helpers de imagen === */
-function subir_imagen($file, $UPLOAD_DIR){
+function subir_imagen($file, $UPLOAD_DIR)
+{
   if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) return [null, null];
   $tmp  = $file['tmp_name'];
   $size = (int)$file['size'];
@@ -29,7 +33,7 @@ function subir_imagen($file, $UPLOAD_DIR){
   $finfo = finfo_open(FILEINFO_MIME_TYPE);
   $mime  = finfo_file($finfo, $tmp);
   finfo_close($finfo);
-  $map = ['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'];
+  $map = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
   if (!isset($map[$mime])) return [null, "Formato no permitido (solo JPG/PNG/WEBP)."];
 
   $ext = $map[$mime];
@@ -41,10 +45,10 @@ function subir_imagen($file, $UPLOAD_DIR){
 }
 
 /* === Acciones POST === */
-if($_SERVER['REQUEST_METHOD'] === 'POST'){
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $accion = $_POST['accion'] ?? '';
 
-  if($accion === 'crear'){
+  if ($accion === 'crear') {
     $nombre = trim($_POST['nombre'] ?? '');
     $desc   = trim($_POST['descripcion'] ?? '');
     $precio = (float)($_POST['precio'] ?? 0);
@@ -56,7 +60,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
       [$imgName, $err] = subir_imagen($_FILES['imagen'], $UPLOAD_DIR);
     }
 
-    if($nombre !== '' && $precio > 0){
+    if ($nombre !== '' && $precio > 0) {
       $sql = "INSERT INTO platillos (Negocio_id,Nombre,Descripcion,Precio,Disponible,Imagen) 
               VALUES (?,?,?,?,?,?)";
       $ins = $mysqli->prepare($sql);
@@ -64,17 +68,18 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
       $ins->execute();
       $ins->close();
     }
-
-  } elseif($accion === 'eliminar'){
+  } elseif ($accion === 'eliminar') {
     $id = (int)($_POST['id'] ?? 0);
-    if($id > 0){
+    if ($id > 0) {
       // Borrar archivo si existe
       $q = $mysqli->prepare("SELECT Imagen FROM platillos WHERE Id_platillo=? AND Negocio_id=?");
       $q->bind_param("ii", $id, $negocio_id);
       $q->execute();
       $img = $q->get_result()->fetch_assoc()['Imagen'] ?? null;
       $q->close();
-      if ($img && file_exists($UPLOAD_DIR . "/" . $img)) { @unlink($UPLOAD_DIR . "/" . $img); }
+      if ($img && file_exists($UPLOAD_DIR . "/" . $img)) {
+        @unlink($UPLOAD_DIR . "/" . $img);
+      }
 
       // Borrar registro
       $del = $mysqli->prepare("DELETE FROM platillos WHERE Id_platillo=? AND Negocio_id=?");
@@ -82,8 +87,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
       $del->execute();
       $del->close();
     }
-
-  } elseif($accion === 'editar'){
+  } elseif ($accion === 'editar') {
     // Edición completa (nombre, desc, precio, disponible, imagen)
     $id    = (int)($_POST['id'] ?? 0);
     $nombre = trim($_POST['nombre'] ?? '');
@@ -91,7 +95,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $precio = (float)($_POST['precio'] ?? 0);
     $disp   = (int)($_POST['disponible'] ?? 1);
 
-    if($id > 0 && $nombre !== '' && $precio > 0){
+    if ($id > 0 && $nombre !== '' && $precio > 0) {
       // Traer imagen actual
       $q = $mysqli->prepare("SELECT Imagen FROM platillos WHERE Id_platillo=? AND Negocio_id=?");
       $q->bind_param("ii", $id, $negocio_id);
@@ -113,10 +117,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
               WHERE Id_platillo=? AND Negocio_id=?";
       $up = $mysqli->prepare($sql);
       $up->bind_param("ssdssii", $nombre, $desc, $precio, $disp, $newImg, $id, $negocio_id);
-      $up->close(); 
-
-      $up = $mysqli->prepare("UPDATE platillos SET Nombre=?, Descripcion=?, Precio=?, Disponible=?, Imagen=? WHERE Id_platillo=? AND Negocio_id=?");
-      $up->bind_param("ssdissi", $nombre, $desc, $precio, $disp, $newImg, $id, $negocio_id);
       $up->execute();
       $up->close();
 
@@ -135,14 +135,17 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 $platos = [];
 $st = $mysqli->prepare("SELECT Id_platillo,Nombre,Descripcion,Precio,Disponible,Imagen 
                         FROM platillos WHERE Negocio_id=? ORDER BY Id_platillo DESC");
-$st->bind_param("i",$negocio_id);
+$st->bind_param("i", $negocio_id);
 $st->execute();
 $res = $st->get_result();
-while($r = $res->fetch_assoc()){ $platos[] = $r; }
+while ($r = $res->fetch_assoc()) {
+  $platos[] = $r;
+}
 $st->close();
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -150,6 +153,7 @@ $st->close();
   <link href="../assets/css/app.css" rel="stylesheet">
   <title>Platillos</title>
 </head>
+
 <body>
   <div class="container-fluid">
     <div class="row">
@@ -186,24 +190,32 @@ $st->close();
         <!-- Tabla -->
         <table class="table table-sm align-middle">
           <thead>
-            <tr><th>Img</th><th>Nombre</th><th>Descripción</th><th>Precio</th><th>Disp</th><th style="width:160px"></th></tr>
+            <tr>
+              </th>
+              <th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Precio</th>
+              <th>Disponible</th>
+              <th style="width:160px"></th>
+            </tr>
           </thead>
           <tbody>
-            <?php foreach($platos as $p): ?>
+            <?php foreach ($platos as $p): ?>
               <tr>
                 <td style="width:70px">
-                  <?php if(!empty($p['Imagen'])): ?>
-                    <img class="thumb" src="<?php echo $PUBLIC_UPLOAD . '/' . htmlspecialchars($p['Imagen']); ?>" alt="img">
+                  <?php if (!empty($p['Imagen'])): ?>
+                    <img class="thumb" src="<?php echo $PUBLIC_UPLOAD . '/' . htmlspecialchars($p['Imagen']); ?>" alt="">
                   <?php else: ?>
-                    <div class="thumb thumb--placeholder">Sin<br>img</div>
+                    <div class="thumb thumb--placeholder"></div>
                   <?php endif; ?>
                 </td>
                 <td><?php echo htmlspecialchars($p['Nombre']); ?></td>
                 <td><?php echo htmlspecialchars($p['Descripcion'] ?? ''); ?></td>
-                <td>₡<?php echo number_format($p['Precio'],2); ?></td>
+                <td>₡<?php echo number_format($p['Precio'], 2); ?></td>
                 <td><?php echo $p['Disponible'] ? 'Sí' : 'No'; ?></td>
                 <td class="text-end">
-                  <button 
+                  <button
                     class="btn btn-sm btn-outline-primary me-1"
                     data-bs-toggle="modal" data-bs-target="#modalEditar"
                     data-id="<?php echo (int)$p['Id_platillo']; ?>"
@@ -211,8 +223,7 @@ $st->close();
                     data-desc="<?php echo htmlspecialchars($p['Descripcion'] ?? '', ENT_QUOTES); ?>"
                     data-precio="<?php echo (float)$p['Precio']; ?>"
                     data-disp="<?php echo (int)$p['Disponible']; ?>"
-                    data-img="<?php echo htmlspecialchars($p['Imagen'] ?? '', ENT_QUOTES); ?>"
-                  >Editar</button>
+                    data-img="<?php echo htmlspecialchars($p['Imagen'] ?? '', ENT_QUOTES); ?>">Editar</button>
 
                   <form method="post" style="display:inline" onsubmit="return confirm('¿Eliminar platillo?')">
                     <input type="hidden" name="accion" value="eliminar">
@@ -286,7 +297,7 @@ $st->close();
   <script>
     const PUBLIC_UPLOAD = "<?php echo $PUBLIC_UPLOAD; ?>";
     const modal = document.getElementById('modalEditar');
-    modal.addEventListener('show.bs.modal', function (event) {
+    modal.addEventListener('show.bs.modal', function(event) {
       const btn = event.relatedTarget;
       const id = btn.getAttribute('data-id');
       const nombre = btn.getAttribute('data-nombre');
@@ -312,4 +323,5 @@ $st->close();
     });
   </script>
 </body>
+
 </html>

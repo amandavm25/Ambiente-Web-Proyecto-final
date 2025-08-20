@@ -1,4 +1,3 @@
-// assets/js/cart.js
 function _getAll() {
   try { return JSON.parse(localStorage.getItem('mama_cart')) || {}; }
   catch { return {}; }

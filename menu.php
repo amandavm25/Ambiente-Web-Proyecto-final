@@ -1,80 +1,220 @@
 <?php
 session_start();
-require_once("include/auth.php"); require_login();
+require_once("include/auth.php");
+require_login();
 require_once("include/conexion.php");
 
-/* === Rutas  === */
+// Id del negocio
+$negocio_id = (int)($_GET['id'] ?? 0);
+if ($negocio_id <= 0) {
+  die("Negocio inválido");
+}
+
+// Info del negocio 
+$st = $mysqli->prepare("SELECT Id_negocio, Nombre, Horario, Costo_envio, Tiempo_minutos FROM negocios WHERE Id_negocio=?");
+$st->bind_param("i", $negocio_id);
+$st->execute();
+$neg = $st->get_result()->fetch_assoc();
+$st->close();
+if (!$neg) {
+  die("Negocio no encontrado");
+}
+
+// Platillos disponibles
+$plats = [];
+$st = $mysqli->prepare("SELECT Id_platillo, Nombre, Descripcion, Precio, Imagen FROM platillos WHERE Negocio_id=? AND Disponible=1 ORDER BY Nombre");
+$st->bind_param("i", $negocio_id);
+$st->execute();
+$r = $st->get_result();
+while ($row = $r->fetch_assoc()) {
+  $plats[] = $row;
+}
+$st->close();
+
+// Rutas para imágenes de platillos subidas por el negocio
 $BASE = "/mamalila_prof";
 $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
-
-$negocioId = (int)($_GET['id'] ?? 0);
-
-/* Negocio */
-$st = $mysqli->prepare("SELECT Id_negocio, Nombre FROM negocios WHERE Id_negocio=?");
-$st->bind_param("i", $negocioId);
-$st->execute();
-$negocio = $st->get_result()->fetch_assoc();
-$st->close();
-
-/* Platillos (con imagen) */
-$platillos = [];
-$st = $mysqli->prepare("SELECT Id_platillo, Nombre, Descripcion, Precio, Imagen 
-                        FROM platillos 
-                        WHERE Negocio_id=? AND Disponible=1 
-                        ORDER BY Nombre");
-$st->bind_param("i", $negocioId);
-$st->execute();
-$res = $st->get_result();
-while($row = $res->fetch_assoc()){ $platillos[] = $row; }
-$st->close();
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/css/app.css" rel="stylesheet">
-  <title>Menú - Mamalila</title>
+  <title><?php echo htmlspecialchars($neg['Nombre']); ?> – Menú</title>
 </head>
+
 <body>
   <div class="container-fluid">
     <div class="row">
       <?php include("include/menu.php"); ?>
-      <main class="col-md-9 p-4">
-        <a href="home.php">&larr; Volver</a>
-        <h3 class="mt-2"><?php echo htmlspecialchars($negocio['Nombre'] ?? 'Menú'); ?></h3>
 
-        <div class="row g-3 mt-1">
-          <?php foreach($platillos as $p): ?>
-            <div class="col-md-4">
-              <div class="card h-100">
-                <div class="card-body">
-                  <?php if(!empty($p['Imagen'])): ?>
-                    <img class="thumb mb-2" src="<?php echo $PUBLIC_UPLOAD . '/' . htmlspecialchars($p['Imagen']); ?>" alt="img">
-                  <?php endif; ?>
-                  <h5 class="card-title mb-1">
-                    <?php echo htmlspecialchars($p['Nombre']); ?> 
-                    <small class="text-muted">₡<?php echo number_format($p['Precio'],0); ?></small>
-                  </h5>
-                  <p class="card-text"><?php echo htmlspecialchars($p['Descripcion'] ?? ''); ?></p>
-                  <button class="btn btn-primary"
-                          onclick="addToCart(<?php echo (int)$p['Id_platillo']; ?>, 
-                                             '<?php echo htmlspecialchars($p['Nombre'], ENT_QUOTES); ?>', 
-                                             <?php echo (float)$p['Precio']; ?>, 
-                                             <?php echo (int)$negocioId; ?>)">
-                    Agregar
-                  </button>
+      <main class="col-md-9 p-4">
+        <a href="home.php">&larr; Volver al inicio</a>
+        <h3 class="mt-2"><?php echo htmlspecialchars($neg['Nombre']); ?></h3>
+        <div class="text-muted mb-3">
+          Costo de envío: ₡<?php echo number_format((float)($neg['Costo_envio'] ?? 0), 0); ?>
+          • Tiempo estimado: <?php echo (int)($neg['Tiempo_minutos'] ?? 20); ?> min
+          <?php if (!empty($neg['Horario'])): ?> • Horario: <?php echo htmlspecialchars($neg['Horario']); ?><?php endif; ?>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-8">
+            <div class="row g-3">
+              <?php if (!count($plats)): ?>
+                <p class="text-muted">Este negocio aún no tiene platillos disponibles.</p>
+              <?php else: ?>
+                <?php foreach ($plats as $p): ?>
+                  <div class="col-md-6">
+                    <div class="card h-100">
+                      <?php if (!empty($p['Imagen'])): ?>
+                        <img class="card-img-top" style="object-fit:cover; height:180px"
+                          src="<?php echo $PUBLIC_UPLOAD . '/' . htmlspecialchars($p['Imagen']); ?>"
+                          alt="img">
+                      <?php endif; ?>
+                      <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-1"><?php echo htmlspecialchars($p['Nombre']); ?></h5>
+                        <div class="small text-muted mb-2"><?php echo htmlspecialchars($p['Descripcion'] ?? ''); ?></div>
+                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                          <div class="fw-semibold">₡<?php echo number_format($p['Precio'], 0); ?></div>
+                          <button class="btn btn-sm btn-outline-primary"
+                            data-id="<?php echo (int)$p['Id_platillo']; ?>"
+                            data-name="<?php echo htmlspecialchars($p['Nombre'], ENT_QUOTES); ?>"
+                            data-price="<?php echo (float)$p['Precio']; ?>"
+                            onclick="addToCart(this)">
+                            Agregar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </div>
+          </div>
+
+          <!-- Carrito lateral -->
+          <div class="col-lg-4">
+            <div class="card position-sticky" style="top:1rem">
+              <div class="card-body">
+                <h5 class="card-title">Tu carrito</h5>
+                <div id="cartEmpty" class="text-muted">No hay productos agregados.</div>
+                <div id="cartBox" style="display:none">
+                  <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                      <thead>
+                        <tr>
+                          <th>Producto</th>
+                          <th class="text-center">Cant.</th>
+                          <th class="text-end">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody id="cartRows"></tbody>
+                      <tfoot>
+                        <tr>
+                          <th colspan="2" class="text-end">Subtotal</th>
+                          <th class="text-end" id="cartSubtotal">₡0</th>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <a class="btn btn-primary flex-fill" href="checkout.php?negocio=<?php echo $negocio_id; ?>">
+                      Ir al carrito
+                    </a>
+                    <button class="btn btn-outline-secondary" type="button" onclick="vaciar()">Vaciar</button>
+                  </div>
                 </div>
               </div>
             </div>
-          <?php endforeach; ?>
+          </div>
         </div>
-
-        <a class="btn btn-success mt-3" href="checkout.php?negocio=<?php echo (int)$negocioId; ?>">Ir al carrito</a>
       </main>
     </div>
   </div>
+
   <script src="assets/js/cart.js"></script>
+  <script>
+    const NEGOCIO = <?php echo (int)$negocio_id; ?>;
+
+    function addToCart(btn) {
+      const id = Number(btn.dataset.id);
+      const name = btn.dataset.name;
+      const price = Number(btn.dataset.price);
+      const items = getCartFor(NEGOCIO) || [];
+      const i = items.findIndex(x => x.id === id);
+      if (i >= 0) {
+        items[i].qty += 1;
+      } else {
+        items.push({
+          id,
+          name,
+          price,
+          qty: 1
+        });
+      }
+      setCartFor(NEGOCIO, items);
+      renderCart();
+    }
+
+    function vaciar() {
+      if (!confirm('¿Vaciar carrito?')) return;
+      clearCartFor(NEGOCIO);
+      renderCart();
+    }
+
+    function renderCart() {
+      const items = getCartFor(NEGOCIO) || [];
+      const rows = document.getElementById('cartRows');
+      const box = document.getElementById('cartBox');
+      const empty = document.getElementById('cartEmpty');
+      const subEl = document.getElementById('cartSubtotal');
+      rows.innerHTML = '';
+      if (!items.length) {
+        box.style.display = 'none';
+        empty.style.display = 'block';
+        subEl.textContent = '₡0';
+        return;
+      }
+      box.style.display = 'block';
+      empty.style.display = 'none';
+      let subtotal = 0;
+      for (const it of items) {
+        const sub = (Number(it.price) || 0) * (Number(it.qty) || 0);
+        subtotal += sub;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+        <td>${it.name}</td>
+        <td class="text-center">
+          <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-outline-secondary" data-act="dec">-</button>
+            <button type="button" class="btn btn-light" disabled>${it.qty}</button>
+            <button type="button" class="btn btn-outline-secondary" data-act="inc">+</button>
+          </div>
+        </td>
+        <td class="text-end">₡${sub.toLocaleString()}</td>`;
+        tr.querySelector('[data-act="dec"]').addEventListener('click', () => chg(it.id, -1));
+        tr.querySelector('[data-act="inc"]').addEventListener('click', () => chg(it.id, +1));
+        rows.appendChild(tr);
+      }
+      subEl.textContent = '₡' + subtotal.toLocaleString();
+    }
+
+    function chg(id, delta) {
+      const items = getCartFor(NEGOCIO) || [];
+      const i = items.findIndex(x => x.id == id);
+      if (i >= 0) {
+        items[i].qty += delta;
+        if (items[i].qty <= 0) items.splice(i, 1);
+        setCartFor(NEGOCIO, items);
+        renderCart();
+      }
+    }
+
+    renderCart();
+  </script>
 </body>
+
 </html>

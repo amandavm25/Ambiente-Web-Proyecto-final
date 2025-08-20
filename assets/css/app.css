@@ -1,107 +1,138 @@
 /* ===== Paleta ===== */
-:root{
+:root {
   --clr-dark: #386641;
-  --clr-mid:  #6A994E;
+  --clr-mid: #6A994E;
   --clr-lime: #A7C957;
-  --clr-cream:#F2E8CF;
-  --clr-red:  #BC4749;
+  --clr-cream: #F2E8CF;
+  --clr-red: #BC4749;
 
   /* Bootstrap overrides */
   --bs-primary: var(--clr-mid);
-  --bs-primary-rgb: 106,153,78;
+  --bs-primary-rgb: 106, 153, 78;
   --bs-danger: var(--clr-red);
   --bs-link-color: var(--clr-mid);
   --bs-link-hover-color: #4f7e3f;
 }
 
-html,body{ height:100%; }
-body{
+html,
+body {
+  height: 100%;
+}
+
+body {
   background: var(--clr-cream) !important;
-  color:#222;
+  color: #222;
 }
 
 /* Tarjetas y tipografía */
-.card{
-  border:0;
-  border-radius:16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+.card {
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
 }
-.card-title{ color: var(--clr-dark); }
+
+.card-title {
+  color: var(--clr-dark);
+}
 
 /* Sidebar */
-.app-sidebar{
+.app-sidebar {
   background: var(--clr-dark);
-  color:#fff;
+  color: #fff;
   min-height: 100vh;
 }
-.app-sidebar .nav-link{
-  color:#fff !important;
-  opacity:.9;
-  border-radius:10px;
-  padding:.45rem .75rem;
+
+.app-sidebar .nav-link {
+  color: #fff !important;
+  opacity: .9;
+  border-radius: 10px;
+  padding: .45rem .75rem;
 }
-.app-sidebar .nav-link:hover{
-  background: rgba(255,255,255,.08);
-  opacity:1;
+
+.app-sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, .08);
+  opacity: 1;
 }
-.app-sidebar .nav-link.active{
+
+.app-sidebar .nav-link.active {
   background: var(--clr-mid);
 }
 
 /* Botones (base) */
-.btn-primary{ border:none; }
-.btn-outline-primary{
+.btn-primary {
+  border: none;
+}
+
+.btn-outline-primary {
   border-color: var(--clr-mid);
   color: var(--clr-mid);
 }
-.btn-outline-primary:hover{
+
+.btn-outline-primary:hover {
   background: var(--clr-mid);
   border-color: var(--clr-mid);
-  color:#fff;
+  color: #fff;
 }
-.btn-danger{ background: var(--clr-red); border:none; }
+
+.btn-danger {
+  background: var(--clr-red);
+  border: none;
+}
 
 /* Módulos/estadísticas */
-.stat{
-  border-radius:16px;
-  padding:18px;
+.stat {
+  border-radius: 16px;
+  padding: 18px;
   background: #ffffffaa;
   border: 1px solid #0000000d;
 }
-.stat .label{ color:#666; }
-.stat .value{ font-size:1.75rem; font-weight:700; color: var(--clr-dark); }
+
+.stat .label {
+  color: #666;
+}
+
+.stat .value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--clr-dark);
+}
 
 /* Badges por estado de pedido */
-.badge-status-pendiente{
+.badge-status-pendiente {
   background: var(--clr-lime);
-  color:#234; 
+  color: #234;
 }
-.badge-status-preparacion{
+
+.badge-status-preparacion {
   background: var(--clr-mid);
 }
-.badge-status-listo{
+
+.badge-status-listo {
   background: var(--clr-dark);
 }
 
 /* Formularios */
-.form-control, .form-select{
-  border-radius:12px;
-  border-color:#e6e6e6;
+.form-control,
+.form-select {
+  border-radius: 12px;
+  border-color: #e6e6e6;
 }
-.form-control:focus, .form-select:focus{
+
+.form-control:focus,
+.form-select:focus {
   border-color: var(--clr-mid);
-  box-shadow: 0 0 0 .25rem rgba(106,153,78,.15);
+  box-shadow: 0 0 0 .25rem rgba(106, 153, 78, .15);
 }
 
 /* === Fuerza colores de botones Bootstrap=== */
-.btn-primary{
+.btn-primary {
   --bs-btn-color: #fff;
   --bs-btn-bg: var(--clr-mid);
   --bs-btn-border-color: var(--clr-mid);
   --bs-btn-hover-color: #fff;
   --bs-btn-hover-bg: #5f8c45;
   --bs-btn-hover-border-color: #5f8c45;
-  --bs-btn-focus-shadow-rgb: 106,153,78;
+  --bs-btn-focus-shadow-rgb: 106, 153, 78;
   --bs-btn-active-color: #fff;
   --bs-btn-active-bg: #4f7e3f;
   --bs-btn-active-border-color: #4f7e3f;
@@ -110,7 +141,7 @@ body{
   --bs-btn-disabled-border-color: var(--clr-mid);
 }
 
-.btn-outline-primary{
+.btn-outline-primary {
   --bs-btn-color: var(--clr-mid);
   --bs-btn-border-color: var(--clr-mid);
   --bs-btn-hover-color: #fff;
@@ -122,32 +153,88 @@ body{
   --bs-btn-disabled-color: var(--clr-mid);
 }
 
-.btn-danger{
+.btn-danger {
   --bs-btn-color: #fff;
   --bs-btn-bg: var(--clr-red);
   --bs-btn-border-color: var(--clr-red);
   --bs-btn-hover-color: #fff;
   --bs-btn-hover-bg: #a53f42;
   --bs-btn-hover-border-color: #a53f42;
-  --bs-btn-focus-shadow-rgb: 188,71,73;
+  --bs-btn-focus-shadow-rgb: 188, 71, 73;
   --bs-btn-active-bg: #95383b;
   --bs-btn-active-border-color: #95383b;
 }
 
-/* Thumbnails de platillos */
-.thumb{
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
+/* Miniaturas de platillos */
+.thumb {
+  width: 64px;
+  height: 64px;
   border-radius: 10px;
-  background: #eee;
+  object-fit: cover;
+  background: #f3f3f3;
+}
+
+.thumb--placeholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  background: #e9f2ea;
+}
+
+/* Portadas de negocios en cards */
+.card .cover {
+  height: 140px;
+  object-fit: cover;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.placeholder-cover {
+  height: 140px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  background: linear-gradient(135deg, var(--clr-mid), var(--clr-lime));
+  opacity: .18;
+}
+
+/* Portada del negocio (tarjeta) */
+.neg-cover{
+  display:block;
+  width:100%;
+  aspect-ratio: 16/9;   /* tamaño consistente sin fijar alto */
+  height:auto;
+  object-fit: cover;     /* llena la tarjeta (recorta si hace falta) */
+  object-position: center;
+  border-radius:.5rem;
+  background:#eef0f2;
+}
+
+/* Para logos o imágenes que NO quieres recortar */
+.neg-cover.contain{
+  object-fit: contain;   /* muestra completa */
+  background:#fff;
+  padding:6px;
+  border:1px solid rgba(0,0,0,.06);
+}
+
+/* Placeholder opcional si no hay imagen */
+.neg-cover.placeholder{
+  background:linear-gradient(135deg,#e9ecef,#f8f9fa);
+}
+
+/* Miniatura de platillo en resultados */
+.dish-thumb{
+  width:48px; height:48px; object-fit:cover; border-radius:.5rem;
+}
+
+/* Variante pequeña de portada para la página de perfil del negocio */
+.neg-cover--sm{
+  max-width: 380px;   /* ajusta a tu gusto (320–480px) */
+  width: 100%;
+  aspect-ratio: 16/9;
+  height: auto;
   display: block;
 }
-.thumb--placeholder{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#666;
-  font-size:.75rem;
-  text-align:center;
+@media (min-width: 992px){
+  .neg-cover--sm{ max-width: 460px; }
 }
