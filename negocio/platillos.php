@@ -7,8 +7,9 @@ require_once("../include/conexion.php");
 /* === Rutas === */
 $BASE = "/mamalila_prof";
 $BASE_DIR = dirname(__DIR__);
-$UPLOAD_DIR = $BASE_DIR . "/uploads/platillos";
-$PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
+$uid        = $_SESSION['usuario']['Id_usuario'];
+$UPLOAD_DIR    = $BASE_DIR . "/uploads/platillos/" . (int)$negocio_id;
+$PUBLIC_UPLOAD = $BASE     . "/uploads/platillos/" . (int)$negocio_id;
 if (!is_dir($UPLOAD_DIR)) {
   @mkdir($UPLOAD_DIR, 0777, true);
 }

@@ -198,48 +198,53 @@ body {
 }
 
 /* Portada del negocio (tarjeta) */
-.neg-cover{
-  display:block;
-  width:100%;
-  aspect-ratio: 16/9;   /* tamaño consistente sin fijar alto */
-  height:auto;
-  object-fit: cover;     /* llena la tarjeta (recorta si hace falta) */
+.neg-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  /* tamaño consistente sin fijar alto */
+  height: auto;
+  object-fit: cover;
+  /* llena la tarjeta (recorta si hace falta) */
   object-position: center;
-  border-radius:.5rem;
-  background:#eef0f2;
+  border-radius: .5rem;
+  background: #eef0f2;
 }
 
 /* Para logos o imágenes que NO quieres recortar */
-.neg-cover.contain{
-  object-fit: contain;   /* muestra completa */
-  background:#fff;
-  padding:6px;
-  border:1px solid rgba(0,0,0,.06);
+.neg-cover.contain {
+  object-fit: contain;
+  /* muestra completa */
+  background: #fff;
+  padding: 6px;
+  border: 1px solid rgba(0, 0, 0, .06);
 }
 
 /* Placeholder opcional si no hay imagen */
-.neg-cover.placeholder{
-  background:linear-gradient(135deg,#e9ecef,#f8f9fa);
+.neg-cover.placeholder {
+  background: linear-gradient(135deg, #e9ecef, #f8f9fa);
 }
 
 /* Miniatura de platillo en resultados */
-.dish-thumb{
-  width:48px; height:48px; object-fit:cover; border-radius:.5rem;
+.dish-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: .5rem;
 }
 
 /* Variante pequeña de portada para la página de perfil del negocio */
-.neg-cover--sm{
-  max-width: 380px;   /* ajusta a tu gusto (320–480px) */
-  width: 100%;
+.neg-cover--sm {
+  max-width: 420px;
   aspect-ratio: 16/9;
   height: auto;
-  display: block;
 }
+
 @media (min-width: 992px){
   .neg-cover--sm{ max-width: 460px; }
 }
 
-.pago-seccion {
+.pago-seccion{
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 8px;

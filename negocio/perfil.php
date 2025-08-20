@@ -1,17 +1,18 @@
 <?php
 session_start();
-require_once("../include/auth.php");
-require_role('negocio');
+require_once("../include/auth.php"); require_role('negocio');
 require_once("../include/conexion.php");
+require_once("../include/config.php");
 
 /* Rutas públicas/privadas para la imagen del negocio */
 $BASE = "/mamalila_prof";
 $BASE_DIR = dirname(__DIR__);
-$NEG_DIR = $BASE_DIR . "/uploads/negocios";
-$PUBLIC_NEG = $BASE . "/uploads/negocios";
+$NEG_DIR    = $BASE_DIR . "/uploads/negocios/" . (int)$neg['Id_negocio'];
+$PUBLIC_NEG = $BASE . "/uploads/negocios/" . (int)$neg['Id_negocio'];
 if (!is_dir($NEG_DIR)) {
   @mkdir($NEG_DIR, 0777, true);
 }
+
 
 /* Helper para subir portada */
 function subir_portada($file, $dir)
@@ -118,7 +119,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div class="alert alert-success"><?php echo htmlspecialchars($flash); ?></div>
         <?php endif; ?>
         <?php if (!empty($neg['Imagen'])): ?>
-          <img class="neg-cover mb-3" src="<?php echo $PUBLIC_NEG . '/' . htmlspecialchars($neg['Imagen']); ?>" alt="">
+          <img class="neg-cover mb-3" 
+                src="<?php echo $PUBLIC_NEG . '/' . htmlspecialchars($neg['Imagen']); ?>" alt="">
         <?php else: ?>
           <div class="neg-cover placeholder mb-3"></div>
         <?php endif; ?>
