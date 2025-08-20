@@ -37,7 +37,6 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
 ?>
 <!doctype html>
 <html lang="es">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -45,7 +44,6 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
   <link href="assets/css/app.css" rel="stylesheet">
   <title><?php echo htmlspecialchars($neg['Nombre']); ?> – Menú</title>
 </head>
-
 <body>
   <div class="container-fluid">
     <div class="row">
@@ -79,13 +77,23 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
                         <div class="small text-muted mb-2"><?php echo htmlspecialchars($p['Descripcion'] ?? ''); ?></div>
                         <div class="mt-auto d-flex justify-content-between align-items-center">
                           <div class="fw-semibold">₡<?php echo number_format($p['Precio'], 0); ?></div>
-                          <button class="btn btn-sm btn-outline-primary"
+
+                          <!-- Botón Agregar: usa SIEMPRE addToCart de cart.js -->
+                          <button
+                            class="btn btn-sm btn-outline-primary"
                             data-id="<?php echo (int)$p['Id_platillo']; ?>"
                             data-name="<?php echo htmlspecialchars($p['Nombre'], ENT_QUOTES); ?>"
                             data-price="<?php echo (float)$p['Precio']; ?>"
-                            onclick="addToCart(this)">
+                            onclick="addToCart({
+                              id: Number(this.dataset.id),
+                              name: this.dataset.name,
+                              price: Number(this.dataset.price),
+                              negocioId: NEGOCIO,
+                              qty: 1
+                            }); renderCart();">
                             Agregar
                           </button>
+
                         </div>
                       </div>
                     </div>
@@ -130,7 +138,8 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
               </div>
             </div>
           </div>
-        </div>
+
+        </div><!-- /row -->
       </main>
     </div>
   </div>
@@ -139,26 +148,6 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
   <script>
     const NEGOCIO = <?php echo (int)$negocio_id; ?>;
 
-    function addToCart(btn) {
-      const id = Number(btn.dataset.id);
-      const name = btn.dataset.name;
-      const price = Number(btn.dataset.price);
-      const items = getCartFor(NEGOCIO) || [];
-      const i = items.findIndex(x => x.id === id);
-      if (i >= 0) {
-        items[i].qty += 1;
-      } else {
-        items.push({
-          id,
-          name,
-          price,
-          qty: 1
-        });
-      }
-      setCartFor(NEGOCIO, items);
-      renderCart();
-    }
-
     function vaciar() {
       if (!confirm('¿Vaciar carrito?')) return;
       clearCartFor(NEGOCIO);
@@ -166,55 +155,65 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
     }
 
     function renderCart() {
-      const items = getCartFor(NEGOCIO) || [];
-      const rows = document.getElementById('cartRows');
-      const box = document.getElementById('cartBox');
-      const empty = document.getElementById('cartEmpty');
-      const subEl = document.getElementById('cartSubtotal');
+      const items  = getCartFor(NEGOCIO) || [];
+      const rows   = document.getElementById('cartRows');
+      const box    = document.getElementById('cartBox');
+      const empty  = document.getElementById('cartEmpty');
+      const subEl  = document.getElementById('cartSubtotal');
+
       rows.innerHTML = '';
       if (!items.length) {
-        box.style.display = 'none';
+        box.style.display   = 'none';
         empty.style.display = 'block';
-        subEl.textContent = '₡0';
+        subEl.textContent   = '₡0';
         return;
       }
-      box.style.display = 'block';
+      box.style.display   = 'block';
       empty.style.display = 'none';
+
       let subtotal = 0;
       for (const it of items) {
-        const sub = (Number(it.price) || 0) * (Number(it.qty) || 0);
-        subtotal += sub;
+        const price = Number(it.price) || 0;
+        const qty   = Number(it.qty)   || 0;
+        const sub   = price * qty;
+        subtotal   += sub;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-        <td>${it.name}</td>
-        <td class="text-center">
-          <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-secondary" data-act="dec">-</button>
-            <button type="button" class="btn btn-light" disabled>${it.qty}</button>
-            <button type="button" class="btn btn-outline-secondary" data-act="inc">+</button>
-          </div>
-        </td>
-        <td class="text-end">₡${sub.toLocaleString()}</td>`;
-        tr.querySelector('[data-act="dec"]').addEventListener('click', () => chg(it.id, -1));
-        tr.querySelector('[data-act="inc"]').addEventListener('click', () => chg(it.id, +1));
+          <td>${it.name ?? ('Producto #' + it.id)}</td>
+          <td class="text-center">
+            <div class="btn-group btn-group-sm">
+              <button type="button" class="btn btn-outline-secondary" data-act="dec">-</button>
+              <button type="button" class="btn btn-light" disabled>${qty}</button>
+              <button type="button" class="btn btn-outline-secondary" data-act="inc">+</button>
+            </div>
+          </td>
+          <td class="text-end">₡${sub.toLocaleString()}</td>
+        `;
+        tr.querySelector('[data-act="dec"]').addEventListener('click', () => setQtyDelta(it.id, -1));
+        tr.querySelector('[data-act="inc"]').addEventListener('click', () => setQtyDelta(it.id, +1));
         rows.appendChild(tr);
       }
       subEl.textContent = '₡' + subtotal.toLocaleString();
     }
 
-    function chg(id, delta) {
+    function setQtyDelta(id, delta) {
       const items = getCartFor(NEGOCIO) || [];
-      const i = items.findIndex(x => x.id == id);
+      const i = items.findIndex(x => String(x.id) === String(id));
       if (i >= 0) {
-        items[i].qty += delta;
-        if (items[i].qty <= 0) items.splice(i, 1);
+        const next = (Number(items[i].qty) || 0) + delta;
+        if (next <= 0) { items.splice(i, 1); }
+        else { items[i].qty = next; }
         setCartFor(NEGOCIO, items);
         renderCart();
       }
     }
 
+    // Debug útil en pruebas
+    console.log('RAW mama_cart:', localStorage.getItem('mama_cart'));
+    console.log('getCartFor NEGOCIO=', NEGOCIO, getCartFor(NEGOCIO));
+
     renderCart();
   </script>
 </body>
-
 </html>

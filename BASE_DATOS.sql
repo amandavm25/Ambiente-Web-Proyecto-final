@@ -102,3 +102,5 @@ INSERT IGNORE INTO platillos (Id_platillo, Negocio_id, Nombre, Descripcion, Prec
 (3,1,'Burrito','Arroz, frijol, carne',2500),
 (4,2,'Sushi roll clásico','8 piezas',3500),
 (5,2,'Yakisoba','Fideos salteados',3200);
+
+ALTER TABLE usuarios ADD UNIQUE KEY uniq_usuarios_email (Email);

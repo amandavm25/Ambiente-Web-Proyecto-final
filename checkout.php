@@ -287,12 +287,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                   <div id="pagoTarjeta" class="pago-seccion d-none">
                     <h6>Pago con tarjeta</h6>
-                    <input type="text" clas="form-control mb-2" placeholder="Número de tarjeta">
-                    <input type="text" clas="form-control mb-2" placeholder="MM/AA">
+                    <input type="text" class="form-control mb-2" placeholder="Número de tarjeta">
+                    <input type="text" class="form-control mb-2" placeholder="MM/AA">
                     <input type="text" class="form-control mb-2" placeholder="CVV">
                   </div>
 
-                  <div i="pagoSinpe" class="pago-seccion d-none">
+                  <div id="pagoSinpe" class="pago-seccion d-none">
                     <h6>Pago con SINPE Móvil</h6>
                     <p>Realice la transferencia al número: <strong>8888-8888</strong></p>
                   </div>
@@ -313,113 +313,147 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <script src="assets/js/cart.js"></script>
-  <script>
-    const NEGOCIO = <?php echo (int)$negocio_id; ?>;
-    const ENVIO_NEG = <?php echo (float)$costo_envio_neg; ?>;
+<script>
+  // ==== Configs que vienen del PHP ====
+  const NEGOCIO  = <?php echo (int)$negocio_id; ?>;
+  const ENVIO_NEG = <?php echo (float)$costo_envio_neg; ?>;
 
-    const rows = document.getElementById('cartRows');
-    const subEl = document.getElementById('cartSubtotal');
-    const descEl = document.getElementById('cartDesc');
-    const envEl = document.getElementById('cartEnvio');
-    const totEl = document.getElementById('cartTotal');
-    const cartBox = document.getElementById('cartBox');
-    const cartEmpty = document.getElementById('cartEmpty');
-    const selEntrega = document.getElementById('selEntrega');
+  // ==== Elementos UI ====
+  const rows = document.getElementById('cartRows');
+  const subEl = document.getElementById('cartSubtotal');
+  const descEl = document.getElementById('cartDesc');
+  const envEl = document.getElementById('cartEnvio');
+  const totEl = document.getElementById('cartTotal');
+  const cartBox = document.getElementById('cartBox');
+  const cartEmpty = document.getElementById('cartEmpty');
+  const selEntrega = document.getElementById('selEntrega');
 
-    function renderCart() {
-      const items = getCartFor(NEGOCIO) || [];
-      rows.innerHTML = '';
-      if (!items.length) {
-        cartBox.style.display = 'none';
-        cartEmpty.style.display = 'block';
-        calcTotals();
-        return;
-      }
-      cartBox.style.display = 'block';
-      cartEmpty.style.display = 'none';
+  // ==== Helpers fallback por si cart.js no está ====
+  function _getAll() { try { return JSON.parse(localStorage.getItem('mama_cart')) || {}; } catch { return {}; } }
+  function _saveAll(all){ localStorage.setItem('mama_cart', JSON.stringify(all)); }
+  function getCartFor(id){ if (typeof window.getCartFor==='function') return window.getCartFor(id); const all=_getAll(); return all[String(id)] || []; }
+  function setCartFor(id, items){ if (typeof window.setCartFor==='function') return window.setCartFor(id, items); const all=_getAll(); all[String(id)] = items; _saveAll(all); }
+  function clearCartFor(id){ if (typeof window.clearCartFor==='function') return window.clearCartFor(id); const all=_getAll(); delete all[String(id)]; _saveAll(all); }
 
-      for (const it of items) {
-        const sub = (Number(it.price) || 0) * (Number(it.qty) || 0);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-        <td>${it.name}</td>
+  // ==== Render del carrito ====
+  function renderCart() {
+    const items = getCartFor(NEGOCIO) || [];
+    rows.innerHTML = '';
+
+    if (!items.length) {
+      cartBox.style.display = 'none';
+      cartEmpty.style.display = 'block';
+      calcTotals();
+      return;
+    }
+
+    cartBox.style.display = 'block';
+    cartEmpty.style.display = 'none';
+
+    for (const it of items) {
+      const price = Number(it.price) || 0;
+      const qty   = Number(it.qty) || 0;
+      const sub   = price * qty;
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${it.name ?? ('Producto #' + it.id)}</td>
         <td class="text-center">
           <div class="btn-group btn-group-sm">
             <button type="button" class="btn btn-outline-secondary" data-act="dec">-</button>
-            <button type="button" class="btn btn-light" disabled>${it.qty}</button>
+            <button type="button" class="btn btn-light" disabled>${qty}</button>
             <button type="button" class="btn btn-outline-secondary" data-act="inc">+</button>
           </div>
         </td>
-        <td class="text-end">₡${sub.toLocaleString()}</td>`;
-        tr.querySelector('[data-act="dec"]').addEventListener('click', () => changeQty(it.id, -1));
-        tr.querySelector('[data-act="inc"]').addEventListener('click', () => changeQty(it.id, +1));
-        rows.appendChild(tr);
+        <td class="text-end">₡${sub.toLocaleString()}</td>
+      `;
+      tr.querySelector('[data-act="dec"]').addEventListener('click', () => changeQty(it.id, -1));
+      tr.querySelector('[data-act="inc"]').addEventListener('click', () => changeQty(it.id, +1));
+      rows.appendChild(tr);
+    }
+    calcTotals();
+  }
+
+  function changeQty(id, delta) {
+    const items = getCartFor(NEGOCIO);
+    const i = items.findIndex(x => String(x.id) === String(id));
+    if (i >= 0) {
+      items[i].qty = (Number(items[i].qty) || 0) + delta;
+      if (items[i].qty <= 0) items.splice(i, 1);
+      setCartFor(NEGOCIO, items);
+      renderCart();
+    }
+  }
+
+  function calcTotals() {
+    const items = getCartFor(NEGOCIO) || [];
+    let subtotal = 0;
+    for (const it of items) subtotal += (Number(it.price) || 0) * (Number(it.qty) || 0);
+    const envio = (selEntrega?.value === 'Recoger en tienda') ? 0 : ENVIO_NEG;
+    const desc  = 0; // Descuento real en servidor
+
+    subEl.textContent = '₡' + subtotal.toLocaleString();
+    descEl.textContent = '₡' + desc.toLocaleString();
+    envEl.textContent  = '₡' + envio.toLocaleString();
+    totEl.textContent  = '₡' + (subtotal - desc + envio).toLocaleString();
+  }
+
+  selEntrega?.addEventListener('change', calcTotals);
+  document.getElementById('btnVaciar')?.addEventListener('click', () => {
+    if (confirm('¿Vaciar carrito?')) { clearCartFor(NEGOCIO); renderCart(); }
+  });
+
+  // Al enviar, empaqueta solo id y qty
+  document.getElementById('checkoutForm').addEventListener('submit', (e) => {
+    const items = getCartFor(NEGOCIO) || [];
+    if (!items.length) { e.preventDefault(); alert('Tu carrito está vacío.'); return; }
+    document.getElementById('items_json').value = JSON.stringify(items.map(x => ({ id: x.id, qty: Number(x.qty) || 0 })));
+  });
+
+  // Toggle métodos de pago
+  const selectPago = document.getElementById("metodoPago");
+  const seccionesPago = {
+    tarjeta: document.getElementById("pagoTarjeta"),
+    sinpe: document.getElementById("pagoSinpe"),
+    transferencia: document.getElementById("pagoTransferencia")
+  };
+  selectPago?.addEventListener("change", () => {
+    Object.values(seccionesPago).forEach(div => div?.classList.add("d-none"));
+    if (selectPago.value && seccionesPago[selectPago.value]) seccionesPago[selectPago.value].classList.remove("d-none");
+  });
+
+  // === DIAGNÓSTICO RÁPIDO ===
+  (function(){
+    console.log('[CHK] origin:', location.origin, 'path:', location.pathname);
+    console.log('[CHK] NEGOCIO:', NEGOCIO);
+    const raw = localStorage.getItem('mama_cart');
+    console.log('[CHK] mama_cart RAW:', raw);
+
+    let all = {};
+    try { all = JSON.parse(raw) || {}; } catch(e){ all = {}; }
+    const keys = Object.keys(all);
+    console.log('[CHK] keys:', keys);
+    console.log('[CHK] getCartFor(expected):', NEGOCIO, getCartFor(NEGOCIO));
+
+    // Si hay un único carrito guardado con otra clave, lo replica temporalmente a la esperada
+    if ((!getCartFor(NEGOCIO) || getCartFor(NEGOCIO).length === 0) && keys.length === 1) {
+      const onlyKey = keys[0];
+      if (onlyKey !== String(NEGOCIO)) {
+        console.warn('[CHK] Carrito bajo clave', onlyKey, '→ copiando a', String(NEGOCIO));
+        const tmp = JSON.parse(JSON.stringify(all[onlyKey] || []));
+        setCartFor(NEGOCIO, tmp);
       }
-      calcTotals();
     }
 
-    function changeQty(id, delta) {
-      const items = getCartFor(NEGOCIO);
-      const i = items.findIndex(x => x.id == id);
-      if (i >= 0) {
-        items[i].qty += delta;
-        if (items[i].qty <= 0) items.splice(i, 1);
-        setCartFor(NEGOCIO, items);
-        renderCart();
-      }
-    }
+    // Captura errores JS
+    window.addEventListener('error', (e)=> {
+      console.error('[JS ERROR]', e.message, e.filename+':'+e.lineno+':'+e.colno);
+      alert('Error JS: ' + e.message);
+    }, { once:true });
+  })();
 
-    function calcTotals() {
-      const items = getCartFor(NEGOCIO) || [];
-      let subtotal = 0;
-      for (const it of items) {
-        subtotal += (Number(it.price) || 0) * (Number(it.qty) || 0);
-      }
-      const envio = (selEntrega?.value === 'Recoger en tienda') ? 0 : ENVIO_NEG;
-      // El descuento solo se calcula definitivo en servidor (por fechas/uso/negocio)
-      const desc = 0;
-      subEl.textContent = '₡' + subtotal.toLocaleString();
-      descEl.textContent = '₡' + desc.toLocaleString();
-      envEl.textContent = '₡' + envio.toLocaleString();
-      totEl.textContent = '₡' + (subtotal - desc + envio).toLocaleString();
-    }
-
-    selEntrega?.addEventListener('change', calcTotals);
-    document.getElementById('btnVaciar')?.addEventListener('click', () => {
-      if (confirm('¿Vaciar carrito?')) {
-        clearCartFor(NEGOCIO);
-        renderCart();
-      }
-    });
-
-    document.getElementById('checkoutForm').addEventListener('submit', (e) => {
-      const items = getCartFor(NEGOCIO) || [];
-      if (!items.length) {
-        e.preventDefault();
-        alert('Tu carrito está vacío.');
-        return;
-      }
-      document.getElementById('items_json').value = JSON.stringify(items.map(x => ({
-        id: x.id,
-        qty: x.qty
-      })));
-    });
-
-    renderCart();
-
-    const selectPago = document.getElementById("metodoPago");
-    const seccionesPago = {
-      tarjeta: document.getElementById("pagoTarjeta"),
-      sinpe: document.getElementById("pagoSinpe"),
-      transferencia: document.getElementById("pagoTransferencia")
-    };
-    selectPago.addEventListener("change", () => {
-      Object.values(seccionesPago).forEach(div -> div.classList.add("d-none"));
-      if (selectPago.value && seccionesPago[selectPago.value]) {
-        seccionesPago[selectPago.value].classList.remove("d-none");
-      }
-    });
-  </script>
+  // Primer render (después del diagnóstico)
+  renderCart();
+</script>
 </body>
-
 </html>
