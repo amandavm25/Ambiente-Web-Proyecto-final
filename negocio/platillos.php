@@ -4,29 +4,34 @@ require_once("../include/auth.php");
 require_role('negocio');
 require_once("../include/conexion.php");
 
-/* === Rutas === */
-$BASE = "/mamalila_prof";
-$BASE_DIR = dirname(__DIR__);
-$uid        = $_SESSION['usuario']['Id_usuario'];
-$UPLOAD_DIR    = $BASE_DIR . "/uploads/platillos/" . (int)$negocio_id;
-$PUBLIC_UPLOAD = $BASE     . "/uploads/platillos/" . (int)$negocio_id;
-if (!is_dir($UPLOAD_DIR)) {
-  @mkdir($UPLOAD_DIR, 0777, true);
-}
-
 /* === Id del negocio del usuario logueado === */
-$uid = $_SESSION['usuario']['Id_usuario'];
-$st = $mysqli->prepare("SELECT Id_negocio FROM negocios WHERE Usuario_id=?");
+$uid = (int)($_SESSION['usuario']['Id_usuario'] ?? 0);
+if ($uid <= 0) { die("Sesión inválida."); }
+
+$st = $mysqli->prepare("SELECT Id_negocio FROM negocios WHERE Usuario_id=? LIMIT 1");
 $st->bind_param("i", $uid);
 $st->execute();
 $row = $st->get_result()->fetch_assoc();
 $st->close();
+
 $negocio_id = $row ? (int)$row['Id_negocio'] : 0;
+if ($negocio_id <= 0) {
+  die("No se encontró un negocio asociado a tu cuenta.");
+}
+
+/* === Rutas (ya con $negocio_id definido) === */
+$BASE          = "/mamalila_prof";                   
+$BASE_DIR      = dirname(__DIR__);
+$UPLOAD_DIR    = $BASE_DIR . "/uploads/platillos/" . $negocio_id;
+$PUBLIC_UPLOAD = $BASE     . "/uploads/platillos/" . $negocio_id;
+
+if (!is_dir($UPLOAD_DIR)) { @mkdir($UPLOAD_DIR, 0777, true); }
 
 /* === Helpers de imagen === */
 function subir_imagen($file, $UPLOAD_DIR)
 {
   if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) return [null, null];
+
   $tmp  = $file['tmp_name'];
   $size = (int)$file['size'];
   if ($size > 2 * 1024 * 1024) return [null, "La imagen supera 2MB."];
@@ -34,11 +39,13 @@ function subir_imagen($file, $UPLOAD_DIR)
   $finfo = finfo_open(FILEINFO_MIME_TYPE);
   $mime  = finfo_file($finfo, $tmp);
   finfo_close($finfo);
+
   $map = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
   if (!isset($map[$mime])) return [null, "Formato no permitido (solo JPG/PNG/WEBP)."];
 
-  $ext = $map[$mime];
+  $ext  = $map[$mime];
   $name = uniqid('pl_', true) . "." . $ext;
+
   if (!@move_uploaded_file($tmp, $UPLOAD_DIR . "/" . $name)) {
     return [null, "No se pudo guardar la imagen."];
   }
@@ -56,19 +63,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $disp   = (int)($_POST['disponible'] ?? 1);
     $imgName = null;
 
-    // Subir imagen 
     if (!empty($_FILES['imagen']['name'])) {
       [$imgName, $err] = subir_imagen($_FILES['imagen'], $UPLOAD_DIR);
+      // podrías manejar $err para mostrar feedback
     }
 
     if ($nombre !== '' && $precio > 0) {
-      $sql = "INSERT INTO platillos (Negocio_id,Nombre,Descripcion,Precio,Disponible,Imagen) 
+      $sql = "INSERT INTO platillos (Negocio_id, Nombre, Descripcion, Precio, Disponible, Imagen)
               VALUES (?,?,?,?,?,?)";
       $ins = $mysqli->prepare($sql);
       $ins->bind_param("issdis", $negocio_id, $nombre, $desc, $precio, $disp, $imgName);
       $ins->execute();
       $ins->close();
     }
+
   } elseif ($accion === 'eliminar') {
     $id = (int)($_POST['id'] ?? 0);
     if ($id > 0) {
@@ -78,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $q->execute();
       $img = $q->get_result()->fetch_assoc()['Imagen'] ?? null;
       $q->close();
+
       if ($img && file_exists($UPLOAD_DIR . "/" . $img)) {
         @unlink($UPLOAD_DIR . "/" . $img);
       }
@@ -88,9 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $del->execute();
       $del->close();
     }
+
   } elseif ($accion === 'editar') {
-    // Edición completa (nombre, desc, precio, disponible, imagen)
-    $id    = (int)($_POST['id'] ?? 0);
+    $id     = (int)($_POST['id'] ?? 0);
     $nombre = trim($_POST['nombre'] ?? '');
     $desc   = trim($_POST['descripcion'] ?? '');
     $precio = (float)($_POST['precio'] ?? 0);
@@ -107,17 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $newImg = $oldImg;
       if (!empty($_FILES['imagen_edit']['name'])) {
         [$tmpName, $err] = subir_imagen($_FILES['imagen_edit'], $UPLOAD_DIR);
-        if (!$err && $tmpName) {
-          $newImg = $tmpName;
-        }
+        if (!$err && $tmpName) { $newImg = $tmpName; }
       }
 
-      // Actualizar
-      $sql = "UPDATE platillos 
-              SET Nombre=?, Descripcion=?, Precio=?, Disponible=?, Imagen=? 
+      // Actualizar (Disponible es entero -> 'i')
+      $sql = "UPDATE platillos
+              SET Nombre=?, Descripcion=?, Precio=?, Disponible=?, Imagen=?
               WHERE Id_platillo=? AND Negocio_id=?";
       $up = $mysqli->prepare($sql);
-      $up->bind_param("ssdssii", $nombre, $desc, $precio, $disp, $newImg, $id, $negocio_id);
+      $up->bind_param("ssdisii", $nombre, $desc, $precio, $disp, $newImg, $id, $negocio_id);
       $up->execute();
       $up->close();
 
@@ -134,19 +141,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 /* === Listado de platillos del negocio === */
 $platos = [];
-$st = $mysqli->prepare("SELECT Id_platillo,Nombre,Descripcion,Precio,Disponible,Imagen 
+$st = $mysqli->prepare("SELECT Id_platillo, Nombre, Descripcion, Precio, Disponible, Imagen
                         FROM platillos WHERE Negocio_id=? ORDER BY Id_platillo DESC");
 $st->bind_param("i", $negocio_id);
 $st->execute();
 $res = $st->get_result();
-while ($r = $res->fetch_assoc()) {
-  $platos[] = $r;
-}
+while ($r = $res->fetch_assoc()) { $platos[] = $r; }
 $st->close();
 ?>
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,7 +158,6 @@ $st->close();
   <link href="../assets/css/app.css" rel="stylesheet">
   <title>Platillos</title>
 </head>
-
 <body>
   <div class="container-fluid">
     <div class="row">
@@ -192,8 +195,7 @@ $st->close();
         <table class="table table-sm align-middle">
           <thead>
             <tr>
-              </th>
-              <th>
+              <th style="width:70px"></th>
               <th>Nombre</th>
               <th>Descripción</th>
               <th>Precio</th>
@@ -205,16 +207,33 @@ $st->close();
             <?php foreach ($platos as $p): ?>
               <tr>
                 <td style="width:70px">
-                  <?php if (!empty($p['Imagen'])): ?>
-                    <img class="thumb" src="<?php echo $PUBLIC_UPLOAD . '/' . htmlspecialchars($p['Imagen']); ?>" alt="">
-                  <?php else: ?>
-                    <div class="thumb thumb--placeholder"></div>
-                  <?php endif; ?>
+                  <?php
+                  $img = trim($p['Imagen'] ?? '');
+                  $src = '';
+                  if ($img !== '') {
+                    // 1) ruta por-negocio
+                    $pathNegocio = $UPLOAD_DIR . '/' . $img;
+                    if (file_exists($pathNegocio)) {
+                      $src = $PUBLIC_UPLOAD . '/' . rawurlencode($img);
+                    } else {
+                      // 2) fallback a carpeta global (para registros antiguos)
+                      $pathGlobal = $BASE_DIR . '/uploads/platillos/' . $img;
+                      if (file_exists($pathGlobal)) {
+                        $src = $BASE . '/uploads/platillos/' . rawurlencode($img);
+                      }
+                    }
+                  }
+                  if ($src) {
+                    echo '<img class="thumb" src="'.$src.'" alt="">';
+                  } else {
+                    echo '<div class="thumb thumb--placeholder"></div>';
+                  }
+                  ?>
                 </td>
                 <td><?php echo htmlspecialchars($p['Nombre']); ?></td>
                 <td><?php echo htmlspecialchars($p['Descripcion'] ?? ''); ?></td>
-                <td>₡<?php echo number_format($p['Precio'], 2); ?></td>
-                <td><?php echo $p['Disponible'] ? 'Sí' : 'No'; ?></td>
+                <td>₡<?php echo number_format((float)$p['Precio'], 2); ?></td>
+                <td><?php echo ((int)$p['Disponible'] ? 'Sí' : 'No'); ?></td>
                 <td class="text-end">
                   <button
                     class="btn btn-sm btn-outline-primary me-1"
@@ -224,7 +243,9 @@ $st->close();
                     data-desc="<?php echo htmlspecialchars($p['Descripcion'] ?? '', ENT_QUOTES); ?>"
                     data-precio="<?php echo (float)$p['Precio']; ?>"
                     data-disp="<?php echo (int)$p['Disponible']; ?>"
-                    data-img="<?php echo htmlspecialchars($p['Imagen'] ?? '', ENT_QUOTES); ?>">Editar</button>
+                    data-img="<?php echo htmlspecialchars($p['Imagen'] ?? '', ENT_QUOTES); ?>">
+                    Editar
+                  </button>
 
                   <form method="post" style="display:inline" onsubmit="return confirm('¿Eliminar platillo?')">
                     <input type="hidden" name="accion" value="eliminar">
@@ -236,7 +257,6 @@ $st->close();
             <?php endforeach; ?>
           </tbody>
         </table>
-
       </main>
     </div>
   </div>
@@ -299,19 +319,19 @@ $st->close();
     const PUBLIC_UPLOAD = "<?php echo $PUBLIC_UPLOAD; ?>";
     const modal = document.getElementById('modalEditar');
     modal.addEventListener('show.bs.modal', function(event) {
-      const btn = event.relatedTarget;
-      const id = btn.getAttribute('data-id');
+      const btn    = event.relatedTarget;
+      const id     = btn.getAttribute('data-id');
       const nombre = btn.getAttribute('data-nombre');
-      const desc = btn.getAttribute('data-desc');
+      const desc   = btn.getAttribute('data-desc');
       const precio = btn.getAttribute('data-precio');
-      const disp = btn.getAttribute('data-disp');
-      const img = btn.getAttribute('data-img');
+      const disp   = btn.getAttribute('data-disp');
+      const img    = btn.getAttribute('data-img');
 
-      document.getElementById('edit_id').value = id;
+      document.getElementById('edit_id').value     = id;
       document.getElementById('edit_nombre').value = nombre || '';
-      document.getElementById('edit_desc').value = desc || '';
+      document.getElementById('edit_desc').value   = desc || '';
       document.getElementById('edit_precio').value = precio || 0;
-      document.getElementById('edit_disp').value = (disp === '0') ? '0' : '1';
+      document.getElementById('edit_disp').value   = (String(disp) === '0') ? '0' : '1';
 
       const prev = document.getElementById('edit_preview');
       if (img) {
@@ -324,5 +344,4 @@ $st->close();
     });
   </script>
 </body>
-
 </html>

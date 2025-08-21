@@ -1,5 +1,4 @@
 <?php
-// Por si algún include imprime accidentalmente (BOM/espacios), evita "headers already sent"
 ob_start();
 
 session_start();
@@ -32,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'El correo ya se encuentra registrado.';
       } else {
         $hash = password_hash($pass1, PASSWORD_BCRYPT);
-        $rol  = 'cliente'; // o toma el valor del formulario si habilitas selección
+        $rol  = 'cliente'; 
 
         $ins = $mysqli->prepare("INSERT INTO usuarios (Nombre, Email, Contrasenia, Rol) VALUES (?,?,?,?)");
         if (!$ins) { $error = 'Error interno (prep ins).'; }

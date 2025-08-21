@@ -1,22 +1,32 @@
 <?php
 session_start();
-require_once("../include/auth.php"); require_role('negocio');
+require_once("../include/auth.php");  require_role('negocio');
 require_once("../include/conexion.php");
-require_once("../include/config.php");
 
-/* Rutas públicas/privadas para la imagen del negocio */
-$BASE = "/mamalila_prof";
-$BASE_DIR = dirname(__DIR__);
-$NEG_DIR    = $BASE_DIR . "/uploads/negocios/" . (int)$neg['Id_negocio'];
-$PUBLIC_NEG = $BASE . "/uploads/negocios/" . (int)$neg['Id_negocio'];
-if (!is_dir($NEG_DIR)) {
-  @mkdir($NEG_DIR, 0777, true);
+/* 1) Cargar datos del negocio del usuario ANTES de usar $neg */
+$uid = (int)($_SESSION['usuario']['Id_usuario'] ?? 0);
+if ($uid <= 0) { die("Sesión inválida."); }
+
+$st  = $mysqli->prepare("SELECT * FROM negocios WHERE Usuario_id=? LIMIT 1");
+$st->bind_param("i", $uid);
+$st->execute();
+$neg = $st->get_result()->fetch_assoc();
+$st->close();
+
+if (!$neg) {
+  die("No se encontró un negocio asociado a tu cuenta.");
 }
 
+/* 2) Rutas públicas/privadas para la imagen del negocio (YA con $neg) */
+$BASE     = "/mamalila_prof";          
+$BASE_DIR = dirname(__DIR__);
+$NEG_DIR    = $BASE_DIR . "/uploads/negocios/" . (int)$neg['Id_negocio'];
+$PUBLIC_NEG = $BASE     . "/uploads/negocios/" . (int)$neg['Id_negocio'];
 
-/* Helper para subir portada */
-function subir_portada($file, $dir)
-{
+if (!is_dir($NEG_DIR)) { @mkdir($NEG_DIR, 0777, true); }
+
+/* 3) Helper para subir portada */
+function subir_portada($file, $dir) {
   if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) return [null, null];
   $size = (int)$file['size'];
   if ($size > 2 * 1024 * 1024) return [null, "La imagen supera 2MB."];
@@ -34,17 +44,11 @@ function subir_portada($file, $dir)
   return [$name, null];
 }
 
-/* Datos del negocio del usuario */
-$uid = $_SESSION['usuario']['Id_usuario'] ?? 0;
-$st  = $mysqli->prepare("SELECT * FROM negocios WHERE Usuario_id=? LIMIT 1");
-$st->bind_param("i", $uid);
-$st->execute();
-$neg = $st->get_result()->fetch_assoc();
-$st->close();
-
+/* 4) Flash */
 $flash = $_SESSION['flash'] ?? null;
 unset($_SESSION['flash']);
 
+/* 5) Guardar cambios */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $nombre   = trim($_POST['nombre'] ?? '');
   $tel      = trim($_POST['telefono'] ?? '');
@@ -68,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $upI->execute();
       $upI->close();
       $imgUpdated = true;
-      // refresca en memoria para mostrar de inmediato
+      // refrescar para mostrar de inmediato
       $neg['Imagen'] = $fileName;
     }
   }
@@ -79,15 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     WHERE Id_negocio=? AND Usuario_id=?");
   $up->bind_param(
     "sssssdiii",
-    $nombre,
-    $tel,
-    $email,
-    $dir,
-    $horario,
-    $envio,
-    $tiempo,
-    $neg['Id_negocio'],
-    $uid
+    $nombre, $tel, $email, $dir, $horario, $envio, $tiempo,
+    $neg['Id_negocio'], $uid
   );
   $up->execute();
   $up->close();
@@ -99,7 +96,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!doctype html>
 <html lang="es">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -107,7 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="../assets/css/app.css" rel="stylesheet">
   <title>Mi perfil</title>
 </head>
-
 <body>
   <div class="container-fluid">
     <div class="row">
@@ -118,9 +113,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php if ($flash): ?>
           <div class="alert alert-success"><?php echo htmlspecialchars($flash); ?></div>
         <?php endif; ?>
+
         <?php if (!empty($neg['Imagen'])): ?>
-          <img class="neg-cover mb-3" 
-                src="<?php echo $PUBLIC_NEG . '/' . htmlspecialchars($neg['Imagen']); ?>" alt="">
+          <img class="neg-cover mb-3"
+               src="<?php echo $PUBLIC_NEG . '/' . htmlspecialchars($neg['Imagen']); ?>" alt="">
         <?php else: ?>
           <div class="neg-cover placeholder mb-3"></div>
         <?php endif; ?>
@@ -175,5 +171,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 </body>
-
 </html>

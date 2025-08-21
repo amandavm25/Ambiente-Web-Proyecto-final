@@ -1,31 +1,5 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Servidor: 127.0.0.1
--- Tiempo de generación: 20-08-2025 a las 01:39:55
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
-
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Base de datos: `mamalilabase_db`
---
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `cupones`
---
+CREATE DATABASE IF NOT EXISTS mamalila_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE mamalilabase_db;
 
 CREATE TABLE `cupones` (
   `Id` int(11) NOT NULL,
@@ -45,10 +19,25 @@ CREATE TABLE `cupones` (
 --
 
 INSERT INTO `cupones` (`Id`, `Codigo`, `Tipo`, `Valor`, `Negocio_id`, `Vigente_desde`, `Vigente_hasta`, `Usos_max`, `Usos_actuales`, `Activo`) VALUES
-(1, 'GLOBAL10', 'porc', 10.00, NULL, '2025-08-18', '2025-11-16', 1000, 3, 1),
-(2, 'BIENVENIDO500', 'monto', 500.00, NULL, '2025-08-18', '2025-11-16', 500, 0, 1),
+(1, 'GLOBAL10', 'porc', 10.00, NULL, '2025-08-18', '2025-11-16', 1000, 10, 1),
+(2, 'BIENVENIDO500', 'monto', 500.00, NULL, '2025-08-18', '2025-11-16', 500, 1, 1),
 (3, 'TAQUI15', 'porc', 15.00, 3, '2025-08-18', '2025-11-16', 300, 0, 1),
 (4, 'ENVIO300', 'monto', 300.00, NULL, '2025-08-18', '2025-11-16', 500, 0, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `envios`
+--
+
+CREATE TABLE `envios` (
+  `Id` int(11) NOT NULL,
+  `Pedido_id` int(11) NOT NULL,
+  `Driver_nombre` varchar(120) NOT NULL,
+  `Lat` decimal(10,7) DEFAULT NULL,
+  `Lng` decimal(10,7) DEFAULT NULL,
+  `Actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -61,6 +50,14 @@ CREATE TABLE `favoritos` (
   `Negocio_id` int(11) NOT NULL,
   `creado_en` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `favoritos`
+--
+
+INSERT INTO `favoritos` (`Usuario_id`, `Negocio_id`, `creado_en`) VALUES
+(4, 6, '2025-08-21 05:20:16'),
+(4, 7, '2025-08-21 01:43:11');
 
 -- --------------------------------------------------------
 
@@ -75,27 +72,30 @@ CREATE TABLE `negocios` (
   `Direccion` varchar(255) DEFAULT NULL,
   `Telefono` varchar(30) DEFAULT NULL,
   `Email` varchar(160) DEFAULT NULL,
+  `Imagen` varchar(255) DEFAULT NULL,
   `Horario` varchar(120) DEFAULT NULL,
   `Costo_envio` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `Tiempo_minutos` int(11) NOT NULL DEFAULT 20
+  `Tiempo_minutos` int(11) NOT NULL DEFAULT 20,
+  `Lat` decimal(10,7) DEFAULT NULL,
+  `Lng` decimal(10,7) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `negocios`
 --
 
-INSERT INTO `negocios` (`Id_negocio`, `Usuario_id`, `Nombre`, `Direccion`, `Telefono`, `Email`, `Horario`, `Costo_envio`, `Tiempo_minutos`) VALUES
-(3, 5, 'TaqueriaMexicana', 'Cartago', '84423000', 'taqueriamexicana2025@gmail.com', 'L-D 10am a 10pm', 0.00, 20),
-(4, 6, 'Pizzería La Nona', 'Av. Central 123', '2222-0001', 'nona@mamalila.com', 'L-D 11:00-22:00', 0.00, 20),
-(5, 7, 'Sushi Raíces', 'Calle 4, Plaza Este', '2222-0002', 'raices@sushi.com', 'L-D 12:00-22:00', 0.00, 20),
-(6, 8, 'Café Bosque', 'Boulevard Verde 55', '2222-0003', 'bosque@cafe.com', 'L-D 07:00-20:00', 0.00, 20),
-(7, 9, 'Burger Criollo', 'Av. Oeste 9', '2222-0004', 'criollo@burger.com', 'L-D 11:30-23:00', 0.00, 20),
-(8, 10, 'Vegan Vida', 'Plaza Norte Local 7', '2222-0005', 'vegan@vida.com', 'L-D 11:00-21:00', 0.00, 20),
-(9, 11, 'Parrilla Andina', 'Av. Sur 101', '2233-0001', 'andina@parrilla.com', 'M-D 12:00-23:00', 0.00, 20),
-(10, 12, 'El Puerto Marisquería', 'Costanera 8', '2233-0002', 'puerto@mariscos.com', 'L-D 11:00-22:00', 0.00, 20),
-(11, 13, 'Wok Dragón Dorado', 'Barrio Oriental 12', '2233-0003', 'dragon@wok.com', 'L-D 11:30-21:30', 0.00, 20),
-(12, 14, 'Arepería Caracas', 'Plaza Centro Local 3', '2233-0004', 'caracas@arepas.com', 'L-D 09:00-21:00', 0.00, 20),
-(13, 15, 'La Casa del Postre', 'Paseo del Sol 44', '2233-0005', 'dulce@postres.com', 'M-D 10:00-21:30', 0.00, 20);
+INSERT INTO `negocios` (`Id_negocio`, `Usuario_id`, `Nombre`, `Direccion`, `Telefono`, `Email`, `Imagen`, `Horario`, `Costo_envio`, `Tiempo_minutos`, `Lat`, `Lng`) VALUES
+(3, 5, 'Taqueria Mexicana', 'Cartago, Costa Rica', '84423000', 'taqueriamexicana2025@gmail.com', 'neg_68a66a184255a8.74429464.png', 'L-D 10am a 10pm', 900.00, 20, NULL, NULL),
+(4, 6, 'Pizzería La Nona', 'Av. Central 123', '2222-0001', 'nona@mamalila.com', 'neg_68a6ac86074597.42308281.png', 'L-D 11:00-22:00', 800.00, 20, NULL, NULL),
+(5, 7, 'Sushi Raíces', 'Calle 4, Plaza Este', '2222-0002', 'raices@sushi.com', 'neg_68a6aaf9832f65.38286674.webp', 'L-D 12:00-22:00', 900.00, 20, NULL, NULL),
+(6, 8, 'Café Bosque', 'Boulevard Verde 55', '2222-0003', 'bosque@cafe.com', 'neg_68a67264165aa3.64898300.jpg', 'L-D 07:00-20:00', 700.00, 20, NULL, NULL),
+(7, 9, 'Burger Criollo', 'Av. Oeste 9', '2222-0004', 'criollo@burger.com', 'neg_68a671a4518788.76053736.webp', 'L-D 11:30-23:00', 1000.00, 20, NULL, NULL),
+(8, 10, 'Vegan Vida', 'Plaza Norte Local 7', '2222-0005', 'vegan@vida.com', 'neg_68a6729fc76a19.33349920.webp', 'L-D 11:00-21:00', 750.00, 20, NULL, NULL),
+(9, 11, 'Parrilla Andina', 'Av. Sur 101', '2233-0001', 'andina@parrilla.com', 'neg_68a6abfc950de0.75235581.jpg', 'M-D 12:00-23:00', 0.00, 20, NULL, NULL),
+(10, 12, 'El Puerto Marisquería', 'Costanera 8', '2233-0002', 'puerto@mariscos.com', 'neg_68a66ad842c511.67299354.jpg', 'L-D 11:00-22:00', 500.00, 20, NULL, NULL),
+(11, 13, 'Wok Dragón Dorado', 'Barrio Oriental 12', '2233-0003', 'dragon@wok.com', 'neg_68a672ce611d02.58233806.jpg', 'L-D 11:30-21:30', 650.00, 20, NULL, NULL),
+(12, 14, 'Arepería Caracas', 'Plaza Centro Local 3', '2233-0004', 'caracas@arepas.com', 'neg_68a53bd7e55fe4.39987288.png', 'L-D 09:00-21:00', 800.00, 20, NULL, NULL),
+(13, 15, 'La Casa del Postre', 'Paseo del Sol 44', '2233-0005', 'dulce@postres.com', 'neg_68a6ab7ad1be98.85254335.jpg', 'M-D 10:00-21:30', 750.00, 20, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -115,19 +115,32 @@ CREATE TABLE `pedidos` (
   `Costo_envio` decimal(10,2) NOT NULL DEFAULT 0.00,
   `Tipo_entrega` varchar(20) NOT NULL DEFAULT 'Domicilio',
   `Cupon_codigo` varchar(40) DEFAULT NULL,
-  `Descuento` decimal(10,2) NOT NULL DEFAULT 0.00
+  `Descuento` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `Pago_estado` enum('Pendiente','Aprobado','Rechazado') NOT NULL DEFAULT 'Pendiente',
+  `Referencia_pago` varchar(60) DEFAULT NULL,
+  `Pagado_en` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `pedidos`
 --
 
-INSERT INTO `pedidos` (`Id_pedido`, `Cliente_id`, `Negocio_id`, `Fecha`, `Estado`, `Direccion_Entrega`, `Metodo_Pago`, `Total`, `Costo_envio`, `Tipo_entrega`, `Cupon_codigo`, `Descuento`) VALUES
-(1, 4, 12, '2025-08-19 13:18:30', 'Listo', '300 metros norte de la farmacia fischel', 'Simulado', 6800.00, 0.00, 'Domicilio', NULL, 0.00),
-(2, 4, 3, '2025-08-19 13:29:38', 'En preparación', '300 norte de la farmacia fischel', 'Simulado', 12000.00, 0.00, 'Domicilio', NULL, 0.00),
-(3, 4, 12, '2025-08-19 14:23:54', 'Pendiente', '150 metros sur de la escuela', 'Simulado', 9180.00, 0.00, 'Domicilio', 'GLOBAL10', 1020.00),
-(4, 4, 7, '2025-08-19 14:24:18', 'Pendiente', '150 metros sur de la escuela de paso ancho', 'Simulado', 7740.00, 0.00, 'Domicilio', 'GLOBAL10', 860.00),
-(5, 4, 6, '2025-08-19 14:26:12', 'Pendiente', 'cartago,cartago', 'Simulado', 6750.00, 0.00, 'Domicilio', 'GLOBAL10', 750.00);
+INSERT INTO `pedidos` (`Id_pedido`, `Cliente_id`, `Negocio_id`, `Fecha`, `Estado`, `Direccion_Entrega`, `Metodo_Pago`, `Total`, `Costo_envio`, `Tipo_entrega`, `Cupon_codigo`, `Descuento`, `Pago_estado`, `Referencia_pago`, `Pagado_en`) VALUES
+(1, 4, 12, '2025-08-19 13:18:30', 'Listo', '300 metros norte de la farmacia fischel', 'Simulado', 6800.00, 0.00, 'Domicilio', NULL, 0.00, 'Pendiente', NULL, NULL),
+(2, 4, 3, '2025-08-19 13:29:38', 'Listo', '300 norte de la farmacia fischel', 'Simulado', 12000.00, 0.00, 'Domicilio', NULL, 0.00, 'Pendiente', NULL, NULL),
+(3, 4, 12, '2025-08-19 14:23:54', 'Listo', '150 metros sur de la escuela', 'Simulado', 9180.00, 0.00, 'Domicilio', 'GLOBAL10', 1020.00, 'Pendiente', NULL, NULL),
+(4, 4, 7, '2025-08-19 14:24:18', 'Pendiente', '150 metros sur de la escuela de paso ancho', 'Simulado', 7740.00, 0.00, 'Domicilio', 'GLOBAL10', 860.00, 'Pendiente', NULL, NULL),
+(5, 4, 6, '2025-08-19 14:26:12', 'Pendiente', 'cartago,cartago', 'Simulado', 6750.00, 0.00, 'Domicilio', 'GLOBAL10', 750.00, 'Pendiente', NULL, NULL),
+(6, 4, 12, '2025-08-20 08:36:28', 'Listo', '150 metros sur', 'Simulado', 12150.00, 0.00, 'Domicilio', 'GLOBAL10', 1350.00, 'Pendiente', NULL, NULL),
+(7, 4, 7, '2025-08-20 08:36:56', 'Pendiente', '150 metros sur', 'Simulado', 6800.00, 0.00, 'Domicilio', 'BIENVENIDO500', 500.00, 'Pendiente', NULL, NULL),
+(8, 4, 4, '2025-08-20 08:38:50', 'Listo', '300 norte de la farmacia fischel', 'Simulado', 10890.00, 0.00, 'Domicilio', 'GLOBAL10', 1210.00, 'Pendiente', NULL, NULL),
+(9, 4, 3, '2025-08-20 08:39:51', 'Listo', '300 norte de la farmacia fischel', 'Simulado', 6600.00, 0.00, 'Domicilio', NULL, 0.00, 'Pendiente', NULL, NULL),
+(10, 4, 10, '2025-08-20 01:14:56', 'Pendiente', '150 metros sur', 'Simulado', 11660.00, 500.00, 'Domicilio', 'GLOBAL10', 1240.00, 'Pendiente', NULL, NULL),
+(11, 4, 3, '2025-08-20 01:45:12', 'Listo', 'fischel cartago', 'Simulado', 7900.00, 900.00, 'Domicilio', NULL, 0.00, 'Pendiente', NULL, NULL),
+(12, 4, 3, '2025-08-20 03:33:59', 'Listo', '150 metros sur de la escuela paso ancho', 'Simulado', 6840.00, 900.00, 'Domicilio', 'GLOBAL10', 660.00, 'Pendiente', NULL, NULL),
+(13, 4, 12, '2025-08-21 00:51:30', 'Listo', 'cartago, cartago', 'Simulado', 10700.00, 800.00, 'Domicilio', 'GLOBAL10', 1100.00, 'Pendiente', NULL, NULL),
+(14, 4, 12, '2025-08-21 00:56:59', 'Listo', '300 Metros Norte De La Farmacia Fischel Cartago Los Ángeles', 'Simulado', 7190.00, 800.00, 'Domicilio', 'GLOBAL10', 710.00, 'Pendiente', NULL, NULL),
+(15, 4, 3, '2025-08-21 01:18:23', 'Listo', '300 Metros Norte De La Farmacia Fischel Cartago Los Ángeles', 'Simulado', 7200.00, 900.00, 'Domicilio', 'GLOBAL10', 700.00, 'Pendiente', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -157,7 +170,28 @@ INSERT INTO `pedido_detalles` (`Id_detalle`, `Pedido_id`, `Platillo_id`, `Cantid
 (7, 4, 57, 1, 5200.00),
 (8, 4, 67, 1, 1500.00),
 (9, 5, 40, 2, 3000.00),
-(10, 5, 52, 3, 4500.00);
+(10, 5, 52, 3, 4500.00),
+(11, 6, 146, 1, 3400.00),
+(12, 6, 144, 2, 6400.00),
+(13, 6, 147, 1, 3700.00),
+(14, 7, 62, 1, 1900.00),
+(15, 7, 56, 1, 5400.00),
+(16, 8, 20, 1, 6100.00),
+(17, 8, 19, 1, 6000.00),
+(18, 9, 92, 1, 3400.00),
+(19, 9, 90, 1, 3200.00),
+(20, 10, 119, 1, 5200.00),
+(21, 10, 113, 1, 7200.00),
+(22, 11, 91, 1, 3600.00),
+(23, 11, 92, 1, 3400.00),
+(24, 12, 94, 3, 6600.00),
+(25, 13, 147, 1, 3700.00),
+(26, 13, 146, 1, 3400.00),
+(27, 13, 148, 1, 3900.00),
+(28, 14, 146, 1, 3400.00),
+(29, 14, 147, 1, 3700.00),
+(30, 15, 91, 1, 3600.00),
+(31, 15, 92, 1, 3400.00);
 
 -- --------------------------------------------------------
 
@@ -181,36 +215,36 @@ CREATE TABLE `platillos` (
 
 INSERT INTO `platillos` (`Id_platillo`, `Negocio_id`, `Nombre`, `Descripcion`, `Precio`, `Imagen`, `Disponible`) VALUES
 (7, 3, 'Tacos al pastor', 'Deliciosos tacos de pastor', 7500.00, 'pl_68a401d565f325.00928047.jpg', 1),
-(8, 4, 'Pizza Margherita', 'Tomate, mozzarella y albahaca', 5200.00, 'pl_auto_68a405af919548.42854105.svg', 1),
-(9, 4, 'Pepperoni', 'Pepperoni y queso', 5600.00, 'pl_auto_68a405af938128.33109467.svg', 1),
-(10, 4, 'Cuatro Quesos', 'Mozzarella, gorgonzola, parmesano y provolone', 6200.00, 'pl_auto_68a405af94cf33.97265212.svg', 1),
-(11, 4, 'Hawaiana', 'Jamón y piña', 5600.00, 'pl_auto_68a405af96d619.77495521.svg', 1),
-(12, 4, 'Vegetariana', 'Verduras de temporada', 5400.00, 'pl_auto_68a405af980f87.62158313.svg', 1),
-(13, 4, 'Napolitana', 'Anchoas y aceitunas', 5900.00, 'pl_auto_68a405af9950d0.71749332.svg', 1),
-(14, 4, 'Prosciutto', 'Jamón curado y rúcula', 6500.00, 'pl_auto_68a405af9b6386.44520805.svg', 1),
-(15, 4, 'BBQ Chicken', 'Pollo y salsa BBQ', 6400.00, 'pl_auto_68a405af9cac28.21940830.svg', 1),
-(16, 4, 'Mexicana', 'Jalapeño y chorizo', 6300.00, 'pl_auto_68a405af9dc142.29000286.svg', 1),
-(17, 4, 'Diavola', 'Salami picante', 6200.00, 'pl_auto_68a405af9f7fc3.46078173.svg', 1),
-(18, 4, 'Marinara', 'Tomate, ajo, orégano', 4800.00, 'pl_auto_68a405afa10927.87697410.svg', 1),
-(19, 4, 'Caprese', 'Tomate, mozzarella, pesto', 6000.00, 'pl_auto_68a405afa23b97.12549116.svg', 1),
-(20, 4, 'Calzone', 'Relleno de jamón y queso', 6100.00, 'pl_auto_68a405afa3be66.33360046.svg', 1),
-(21, 4, 'Lasaña', 'Clásica de carne', 6800.00, 'pl_auto_68a405afa4dd12.82628633.svg', 1),
-(22, 4, 'Focaccia', 'Romero y aceite de oliva', 3500.00, 'pl_auto_68a405afa61416.04235368.svg', 1),
-(23, 5, 'California Roll', 'Cangrejo, aguacate y pepino', 4500.00, 'pl_auto_68a405afa73f66.75157181.svg', 1),
-(24, 5, 'Spicy Tuna Roll', 'Atún picante', 5200.00, 'pl_auto_68a405afa864e4.67539621.svg', 1),
-(25, 5, 'Salmon Nigiri', 'Nigiri de salmón', 3800.00, 'pl_auto_68a405afa995b0.26302364.svg', 1),
-(26, 5, 'Ebi Nigiri', 'Nigiri de camarón', 3600.00, 'pl_auto_68a405afaa8d24.98621035.svg', 1),
-(27, 5, 'Dragon Roll', 'Anguila y aguacate', 6500.00, 'pl_auto_68a405afaba861.15351697.svg', 1),
-(28, 5, 'Rainbow Roll', 'Variedad de pescados', 6700.00, 'pl_auto_68a405afad7929.87045566.svg', 1),
-(29, 5, 'Philadelphia Roll', 'Salmón y queso crema', 5400.00, 'pl_auto_68a405afaebc66.22520710.svg', 1),
-(30, 5, 'Gyozas', 'Empanaditas al vapor', 3200.00, 'pl_auto_68a405afaffec2.91645323.svg', 1),
-(31, 5, 'Ramen Shoyu', 'Caldo soya y fideos', 6200.00, 'pl_auto_68a405afb0fed7.18584784.svg', 1),
-(32, 5, 'Ramen Miso', 'Caldo miso', 6200.00, 'pl_auto_68a405afb21a40.93035089.svg', 1),
-(33, 5, 'Yakimeshi', 'Arroz frito', 4500.00, 'pl_auto_68a405afb327b7.52562121.svg', 1),
-(34, 5, 'Teriyaki Pollo', 'Pollo a la plancha teriyaki', 5800.00, 'pl_auto_68a405afb3f1a6.28879609.svg', 1),
-(35, 5, 'Teriyaki Salmón', 'Salmón teriyaki', 6900.00, 'pl_auto_68a405afb51818.96238946.svg', 1),
-(36, 5, 'Sashimi Mix', 'Cortes variados', 7200.00, 'pl_auto_68a405afb62629.16096481.svg', 1),
-(37, 5, 'Edamame', 'Soja al vapor', 2500.00, 'pl_auto_68a405afb73841.38210912.svg', 1),
+(8, 4, 'Pizza Margherita', 'Tomate, mozzarella y albahaca', 5200.00, 'pl_68a6b053a150d6.11545956.jpg', 1),
+(9, 4, 'Pepperoni', 'Pepperoni y queso', 5600.00, 'pl_68a6b02e3f0e60.90551961.jpg', 1),
+(10, 4, 'Cuatro Quesos', 'Mozzarella, gorgonzola, parmesano y provolone', 6200.00, 'pl_68a6b01f41aea8.82129466.jpg', 1),
+(11, 4, 'Hawaiana', 'Jamón y piña', 5600.00, 'pl_68a6afdbcf0029.76182130.jpg', 1),
+(12, 4, 'Vegetariana', 'Verduras de temporada', 5400.00, 'pl_68a6afebad3e35.43056863.jpg', 1),
+(13, 4, 'Napolitana', 'Anchoas y aceitunas', 5900.00, 'pl_68a6b07e0c0218.87529523.jpg', 1),
+(14, 4, 'Prosciutto', 'Jamón curado y rúcula', 6500.00, 'pl_68a6af3a7e6673.08281737.webp', 1),
+(15, 4, 'BBQ Chicken', 'Pollo y salsa BBQ', 6400.00, 'pl_68a6af2cc6e2d1.81124193.jpg', 1),
+(16, 4, 'Mexicana', 'Jalapeño y chorizo', 6300.00, 'pl_68a6af25700b96.64450682.webp', 1),
+(17, 4, 'Diavola', 'Salami picante', 6200.00, 'pl_68a6aeb8daf5d7.76706942.jpg', 1),
+(18, 4, 'Marinara', 'Tomate, ajo, orégano', 4800.00, 'pl_68a6aecdbb3b33.29215289.jpg', 1),
+(19, 4, 'Caprese', 'Tomate, mozzarella, pesto', 6000.00, 'pl_68a6aeaf573ac4.42879323.webp', 1),
+(20, 4, 'Calzone', 'Relleno de jamón y queso', 6100.00, 'pl_68a6ae6852abd1.42397600.webp', 1),
+(21, 4, 'Lasaña', 'Clásica de carne', 6800.00, 'pl_68a6ae020cb8b4.36324032.webp', 1),
+(22, 4, 'Focaccia', 'Romero y aceite de oliva', 3500.00, 'pl_68a6ae392381c9.42556075.jpg', 1),
+(23, 5, 'California Roll', 'Cangrejo, aguacate y pepino', 4500.00, 'pl_68a6b291956222.15280644.webp', 1),
+(24, 5, 'Spicy Tuna Roll', 'Atún picante', 5200.00, 'pl_68a6b28b40fa47.16949272.jpg', 1),
+(25, 5, 'Salmon Nigiri', 'Nigiri de salmón', 3800.00, 'pl_68a6b27434fef0.04307701.jpg', 1),
+(26, 5, 'Ebi Nigiri', 'Nigiri de camarón', 3600.00, 'pl_68a6b2042c6411.16512686.jpg', 1),
+(27, 5, 'Dragon Roll', 'Anguila y aguacate', 6500.00, 'pl_68a6b21d4ee937.61205625.webp', 1),
+(28, 5, 'Rainbow Roll', 'Variedad de pescados', 6700.00, 'pl_68a6b2281e1da2.88804510.webp', 1),
+(29, 5, 'Philadelphia Roll', 'Salmón y queso crema', 5400.00, 'pl_68a6b22ee5cd35.17081064.jpg', 1),
+(30, 5, 'Gyozas', 'Empanaditas al vapor', 3200.00, 'pl_68a6b159cbb505.67772698.jpg', 1),
+(31, 5, 'Ramen Shoyu', 'Caldo soya y fideos', 6200.00, 'pl_68a6b143872f65.35156580.jpg', 1),
+(32, 5, 'Ramen Miso', 'Caldo miso', 6200.00, 'pl_68a6b13450c6d9.82513355.jpg', 1),
+(33, 5, 'Yakimeshi', 'Arroz frito', 4500.00, 'pl_68a6b128d66be8.44628697.jpg', 1),
+(34, 5, 'Teriyaki Pollo', 'Pollo a la plancha teriyaki', 5800.00, 'pl_68a6b0bfb1a0b9.29107782.jpg', 1),
+(35, 5, 'Teriyaki Salmón', 'Salmón teriyaki', 6900.00, 'pl_68a6b0d1bf3038.00866270.jpg', 1),
+(36, 5, 'Sashimi Mix', 'Cortes variados', 7200.00, 'pl_68a6b0dfaf97d2.18446861.webp', 1),
+(37, 5, 'Edamame', 'Soja al vapor', 2500.00, 'pl_68a6b0ef49ca88.94313880.jpg', 1),
 (38, 6, 'Latte', 'Doble espresso con leche', 1800.00, 'pl_auto_68a405afb84b88.64710477.svg', 1),
 (39, 6, 'Cappuccino', 'Espresso, leche y espuma', 1800.00, 'pl_auto_68a405afb95b38.92334871.svg', 1),
 (40, 6, 'Americano', 'Espresso extendido', 1500.00, 'pl_auto_68a405afba38f2.65578318.svg', 1),
@@ -257,19 +291,19 @@ INSERT INTO `platillos` (`Id_platillo`, `Negocio_id`, `Nombre`, `Descripcion`, `
 (81, 8, 'Açaí Bowl', 'Açaí con frutas', 3200.00, 'pl_auto_68a405afeb5ac9.57057871.svg', 1),
 (82, 8, 'Brownie Vegano', 'Chocolate', 1800.00, 'pl_auto_68a405afec2f23.55740345.svg', 1),
 (83, 3, 'Tacos de Asada', 'Res a la parrilla', 3000.00, 'pl_68a40b99131ab9.27681966.jpg', 1),
-(84, 3, 'Tacos de Pollo', 'Pollo marinado', 2700.00, 'pl_auto_68a405af7bc7c2.95021636.svg', 1),
-(85, 3, 'Tacos de Carnitas', 'Cerdo confitado', 2900.00, 'pl_auto_68a405af7cf6f0.18225911.svg', 1),
-(86, 3, 'Tacos de Barbacoa', 'Res al vapor', 3100.00, 'pl_auto_68a405af7e7e05.89757670.svg', 1),
-(87, 3, 'Tacos de Camarón', 'Camarón y chipotle', 3400.00, 'pl_auto_68a405af817f13.48948877.svg', 1),
-(88, 3, 'Quesadilla Sencilla', 'Queso fundido', 2600.00, 'pl_auto_68a405af827317.08265742.svg', 1),
-(89, 3, 'Quesadilla Campechana', 'Mixta', 2900.00, 'pl_auto_68a405af83e607.80810047.svg', 1),
-(90, 3, 'Gringas', 'Pastor con queso', 3200.00, 'pl_auto_68a405af84e038.89142491.svg', 1),
-(91, 3, 'Burrito de Asada', 'Grande', 3600.00, 'pl_auto_68a405af8636f0.51091059.svg', 1),
-(92, 3, 'Burrito al Pastor', 'Grande', 3400.00, 'pl_auto_68a405af87e5f9.70302069.svg', 1),
-(93, 3, 'Nachos con Queso', 'Totopos y queso', 2600.00, 'pl_auto_68a405af8b12d5.68952241.svg', 1),
+(84, 3, 'Tacos de Pollo', 'Pollo marinado', 2700.00, 'pl_68a5299027d743.49783502.jpg', 1),
+(85, 3, 'Tacos de Carnitas', 'Cerdo confitado', 2900.00, 'pl_68a529ab551953.15933707.jpg', 1),
+(86, 3, 'Tacos de Barbacoa', 'Res al vapor', 3100.00, 'pl_68a529d262cba3.36413445.webp', 1),
+(87, 3, 'Tacos de Camarón', 'Camarón y chipotle', 3400.00, 'pl_68a529f37c7628.01841736.jpg', 1),
+(88, 3, 'Quesadilla Sencilla', 'Queso fundido', 2600.00, 'pl_68a52a0b7c0e38.45820751.jpg', 1),
+(89, 3, 'Quesadilla Campechana', 'Mixta', 2900.00, 'pl_68a52a317e7590.77891693.jpg', 1),
+(90, 3, 'Gringas', 'Pastor con queso', 3200.00, 'pl_68a52a70495054.63986838.jpg', 1),
+(91, 3, 'Burrito de Asada', 'Grande', 3600.00, 'pl_68a52a900b0682.56778622.jpg', 1),
+(92, 3, 'Burrito al Pastor', 'Grande', 3400.00, 'pl_68a52aad18e9b5.15553697.jpg', 1),
+(93, 3, 'Nachos con Queso', 'Totopos y queso', 3000.00, 'pl_68a51a34318039.51053553.jpg', 1),
 (94, 3, 'Elote Preparado', 'Mayonesa, queso y chile', 2200.00, 'pl_68a40b68d34801.17279245.jpg', 1),
-(95, 3, 'Sopes', 'Fritos con frijol y carne', 2800.00, 'pl_auto_68a405af8d46a9.32413625.svg', 1),
-(96, 3, 'Tostadas', 'Crujientes con guiso', 2500.00, 'pl_auto_68a405af8f2bf8.35705811.svg', 1),
+(95, 3, 'Sopes', 'Fritos con frijol y carne', 2800.00, 'pl_68a52acda96590.58873115.jpg', 1),
+(96, 3, 'Tostadas', 'Crujientes con guiso', 3000.00, 'pl_68a66d35876193.63070200.jpg', 1),
 (97, 9, 'Bife de chorizo', 'Corte 300g a la parrilla', 7200.00, NULL, 1),
 (98, 9, 'Entraña', 'Corte angosto a punto', 7600.00, NULL, 1),
 (99, 9, 'Asado de tira', 'Costilla a la brasa', 6900.00, NULL, 1),
@@ -327,9 +361,9 @@ INSERT INTO `platillos` (`Id_platillo`, `Negocio_id`, `Nombre`, `Descripcion`, `
 (151, 12, 'Empanada de carne', 'Unidad', 2200.00, NULL, 1),
 (152, 12, 'Empanada de queso', 'Unidad', 2100.00, NULL, 1),
 (153, 12, 'Patacón', 'Doble', 3800.00, NULL, 1),
-(154, 12, 'Mandocas', 'Dulces de maíz', 2400.00, NULL, 1),
-(155, 12, 'Jugos naturales', 'Vaso 16oz', 1800.00, NULL, 1),
-(156, 12, 'Papelón con limón', 'Bebida tradicional', 1500.00, NULL, 1),
+(154, 12, 'Mandocas', 'Dulces de maíz', 2400.00, 'pl_68a66ff7ce9f78.03075784.jpg', 1),
+(155, 12, 'Jugos naturales', 'Vaso 16oz', 1800.00, 'pl_68a66fad420da4.49299777.jpg', 1),
+(156, 12, 'Papelón con limón', 'Bebida tradicional', 1500.00, 'pl_68a66f4e2ac2c3.64872476.jpg', 1),
 (157, 13, 'Cheesecake de fresa', 'Porción', 3200.00, NULL, 1),
 (158, 13, 'Tres leches', 'Porción clásica', 3000.00, NULL, 1),
 (159, 13, 'Tiramisú', 'Porción', 3300.00, NULL, 1),
@@ -368,8 +402,8 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`Id_usuario`, `Nombre`, `Email`, `Contrasenia`, `Direccion`, `Telefono`, `Rol`, `fecha_creacion`) VALUES
-(4, 'Amanda', 'amandavm25@gmail.com', '$2y$10$6eFMefa2LWAVAO8WlKI2iOPQ9c2DXHgPriliHW4SJclTiJzYnFd8i', '300 Metros Norte De La Farmacia Fischel Cartago Los Ángeles', '86524305', 'cliente', '2025-08-19 03:41:50'),
-(5, 'TaqueriaMexicana', 'taqueriamexicana2025@gmail.com', '$2y$10$CNrN0.jyurYsb5PHAe5s5ec94DTLtIt4ezyJzIksi8hK3q.FMb6pq', '', '84423000', 'negocio', '2025-08-19 03:42:38'),
+(4, 'Amanda', 'amandavm25@gmail.com', '$2y$10$T.XZ557fKoCwZ850jnjx9uMB09k.7597QeFRiRajo5bgKyqd2NV9y', '300 Metros Norte De La Farmacia Fischel Cartago Los Ángeles', '86524305', 'cliente', '2025-08-19 03:41:50'),
+(5, 'Taqueria Mexicana', 'taqueriamexicana2025@gmail.com', '$2y$10$CNrN0.jyurYsb5PHAe5s5ec94DTLtIt4ezyJzIksi8hK3q.FMb6pq', 'Cartago,Costa Rica', '84423000', 'negocio', '2025-08-19 03:42:38'),
 (6, 'La Nona Admin', 'admin-nona@mamalila.com', '$2y$10$CV8W01UD8tHTMTCJQxg9p.hS/REP5Adqstbj8g1WQgIN.h.OnJMBu', 'Av. Central 123', '2222-0001', 'negocio', '2025-08-19 04:55:16'),
 (7, 'Sushi Admin', 'admin-raices@sushi.com', '$2y$10$NQq8HW1rJ7Z4qt9cS6Ooiun36hVAfd4zf6UIYGPwx//Ci3UI2lzvW', 'Calle 4, Plaza Este', '2222-0002', 'negocio', '2025-08-19 04:55:17'),
 (8, 'Bosque Admin', 'admin-bosque@cafe.com', '$2y$10$RHIdLZjla./qAkOvTCy/x./s.4Z3UlC87g4sqqFvTOmx3cbEbglX.', 'Boulevard Verde 55', '2222-0003', 'negocio', '2025-08-19 04:55:17'),
@@ -379,7 +413,8 @@ INSERT INTO `usuarios` (`Id_usuario`, `Nombre`, `Email`, `Contrasenia`, `Direcci
 (12, 'Puerto Admin', 'admin-puerto@mariscos.com', '$2y$10$uXfTz3.rj0MIzksPAmWHtO1h9cncKYPDq2Rlmo1Lh5l6MgODNWEAO', 'Costanera 8', '2233-0002', 'negocio', '2025-08-19 05:14:02'),
 (13, 'Dragón Admin', 'admin-dragon@wok.com', '$2y$10$afj8ekjLxfZNk8SgBxhrM.TFutubUwjB1THJHrLVu37d4Lt4/aCCC', 'Barrio Oriental 12', '2233-0003', 'negocio', '2025-08-19 05:14:02'),
 (14, 'Caracas Admin', 'admin-caracas@arepas.com', '$2y$10$GE78/KLxh6VOFl1IYVGg/.1HFDJNpNvQNo0XzIMDevzWgEs6cxxtC', 'Plaza Centro Local 3', '2233-0004', 'negocio', '2025-08-19 05:14:02'),
-(15, 'Postres Admin', 'admin-postres@postres.com', '$2y$10$M4wrtb.6.pURRpdcMSkdj.U9I4mU8TMZ.dLAOugODk/Nu8k2JGJta', 'Paseo del Sol 44', '2233-0005', 'negocio', '2025-08-19 05:14:02');
+(15, 'Postres Admin', 'admin-postres@postres.com', '$2y$10$M4wrtb.6.pURRpdcMSkdj.U9I4mU8TMZ.dLAOugODk/Nu8k2JGJta', 'Paseo del Sol 44', '2233-0005', 'negocio', '2025-08-19 05:14:02'),
+(19, 'Hilda Mora Gómez', 'florsublime.cr@gmail.com', '$2y$10$R9zE4fnkqXajrwloaJXpQ.1slsmHvGhkEYC9c1vNlUKx/NPZM1yxK', NULL, NULL, 'cliente', '2025-08-21 01:15:36');
 
 --
 -- Índices para tablas volcadas
@@ -391,6 +426,13 @@ INSERT INTO `usuarios` (`Id_usuario`, `Nombre`, `Email`, `Contrasenia`, `Direcci
 ALTER TABLE `cupones`
   ADD PRIMARY KEY (`Id`),
   ADD UNIQUE KEY `Codigo` (`Codigo`);
+
+--
+-- Indices de la tabla `envios`
+--
+ALTER TABLE `envios`
+  ADD PRIMARY KEY (`Id`),
+  ADD UNIQUE KEY `Pedido_id` (`Pedido_id`);
 
 --
 -- Indices de la tabla `favoritos`
@@ -434,7 +476,9 @@ ALTER TABLE `platillos`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`Id_usuario`),
-  ADD UNIQUE KEY `Email` (`Email`);
+  ADD UNIQUE KEY `Email` (`Email`),
+  ADD UNIQUE KEY `uniq_usuarios_email` (`Email`),
+  ADD UNIQUE KEY `uq_usuarios_email` (`Email`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -447,6 +491,12 @@ ALTER TABLE `cupones`
   MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT de la tabla `envios`
+--
+ALTER TABLE `envios`
+  MODIFY `Id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `negocios`
 --
 ALTER TABLE `negocios`
@@ -456,13 +506,13 @@ ALTER TABLE `negocios`
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `Id_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `Id_pedido` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT de la tabla `pedido_detalles`
 --
 ALTER TABLE `pedido_detalles`
-  MODIFY `Id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `Id_detalle` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT de la tabla `platillos`
@@ -474,11 +524,17 @@ ALTER TABLE `platillos`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `Id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `Id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Restricciones para tablas volcadas
 --
+
+--
+-- Filtros para la tabla `envios`
+--
+ALTER TABLE `envios`
+  ADD CONSTRAINT `fk_envio_pedido` FOREIGN KEY (`Pedido_id`) REFERENCES `pedidos` (`Id_pedido`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `favoritos`
@@ -514,28 +570,3 @@ ALTER TABLE `platillos`
   ADD CONSTRAINT `platillos_ibfk_1` FOREIGN KEY (`Negocio_id`) REFERENCES `negocios` (`Id_negocio`) ON DELETE CASCADE;
 COMMIT;
 
-ALTER TABLE negocios
-  ADD COLUMN Lat DECIMAL(10,7) NULL,
-  ADD COLUMN Lng DECIMAL(10,7) NULL;
-
-  ALTER TABLE pedidos
-  ADD COLUMN Pago_estado ENUM('Pendiente','Aprobado','Rechazado') NOT NULL DEFAULT 'Pendiente',
-  ADD COLUMN Referencia_pago VARCHAR(60) NULL,
-  ADD COLUMN Pagado_en TIMESTAMP NULL DEFAULT NULL;
-
-
-  CREATE TABLE IF NOT EXISTS envios (
-  Id INT AUTO_INCREMENT PRIMARY KEY,
-  Pedido_id INT NOT NULL UNIQUE,
-  Driver_nombre VARCHAR(120) NOT NULL,
-  Lat DECIMAL(10,7) NULL,
-  Lng DECIMAL(10,7) NULL,
-  Actualizado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_envio_pedido FOREIGN KEY (Pedido_id) REFERENCES pedidos(Id_pedido) ON DELETE CASCADE
-);
-
-
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

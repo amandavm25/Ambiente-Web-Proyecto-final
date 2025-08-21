@@ -33,8 +33,8 @@ $st->close();
 
 // Rutas para imágenes de platillos subidas por el negocio
 $BASE = "/mamalila_prof";
-$PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
-?>
+$PUBLIC_UPLOAD = $BASE . "/uploads/platillos/" . $negocio_id;
+?><
 <!doctype html>
 <html lang="es">
 <head>
@@ -78,19 +78,14 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
                         <div class="mt-auto d-flex justify-content-between align-items-center">
                           <div class="fw-semibold">₡<?php echo number_format($p['Precio'], 0); ?></div>
 
-                          <!-- Botón Agregar: usa SIEMPRE addToCart de cart.js -->
+                          <!-- Botón Agregar: usa addToCart(this) y pasa negocio explícito -->
                           <button
                             class="btn btn-sm btn-outline-primary"
                             data-id="<?php echo (int)$p['Id_platillo']; ?>"
                             data-name="<?php echo htmlspecialchars($p['Nombre'], ENT_QUOTES); ?>"
                             data-price="<?php echo (float)$p['Precio']; ?>"
-                            onclick="addToCart({
-                              id: Number(this.dataset.id),
-                              name: this.dataset.name,
-                              price: Number(this.dataset.price),
-                              negocioId: NEGOCIO,
-                              qty: 1
-                            }); renderCart();">
+                            data-negocio="<?php echo (int)$negocio_id; ?>"
+                            onclick="addToCart(this); renderCart();">
                             Agregar
                           </button>
 
@@ -129,7 +124,7 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
                     </table>
                   </div>
                   <div class="d-flex gap-2">
-                    <a class="btn btn-primary flex-fill" href="checkout.php?negocio=<?php echo $negocio_id; ?>">
+                    <a class="btn btn-primary flex-fill" href="checkout.php?negocio=<?php echo (int)$negocio_id; ?>">
                       Ir al carrito
                     </a>
                     <button class="btn btn-outline-secondary" type="button" onclick="vaciar()">Vaciar</button>
@@ -139,12 +134,13 @@ $PUBLIC_UPLOAD = $BASE . "/uploads/platillos";
             </div>
           </div>
 
-        </div><!-- /row -->
+        </div>
       </main>
     </div>
   </div>
 
-  <script src="assets/js/cart.js"></script>
+  <!-- Carga con cache-buster para evitar JS viejo -->
+  <script src="assets/js/cart.js?v=7"></script>
   <script>
     const NEGOCIO = <?php echo (int)$negocio_id; ?>;
 
